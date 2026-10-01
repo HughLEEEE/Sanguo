@@ -729,6 +729,12 @@ svg.leaflet-image-layer.leaflet-interactive path {
   .errline{color:var(--vermilion-dark);font-weight:700;font-size:12.5px;min-height:1em;margin-top:6px;}
   textarea.code{width:100%;height:120px;font:12px/1.4 ui-monospace,monospace;border:1px solid var(--line);border-radius:5px;background:var(--paper3);color:var(--ink);padding:6px;}
   .menu-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  ul.rep{margin:2px 0 8px;padding-left:18px;} ul.rep li{margin:3px 0;}
+  .offer{display:flex;gap:8px;align-items:flex-start;padding:8px 10px;border:1px solid var(--vermilion);border-radius:6px;background:var(--paper3);}
+  .offer i{width:12px;height:12px;border-radius:2px;flex:none;margin-top:5px;} .offer .hint{margin-left:auto;white-space:nowrap;}
+  .target.off{opacity:.45;cursor:not-allowed;}
+  .lifesel{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;margin:0 0 10px;padding:8px 10px;background:var(--paper2);border-radius:6px;font-size:13px;}
+  .lifesel label{display:flex;align-items:center;gap:5px;cursor:pointer;}
   .menu-grid .btn{padding:10px;}
   #side{border-left:2px solid var(--line);background:var(--paper);overflow:auto;min-height:0;display:flex;flex-direction:column;}
   #panel{padding:12px 14px;flex:1;}
@@ -809,6 +815,8 @@ svg.leaflet-image-layer.leaflet-interactive path {
   table.list th{text-align:left;color:var(--muted);font-weight:400;border-bottom:1px solid var(--line);padding:3px 4px;position:sticky;top:0;background:var(--paper);}
   table.list td{padding:3px 4px;border-bottom:1px dotted #d9ccad;}
   table.list td.n,table.list th.n{text-align:right;}
+  table.list th,table.list td{white-space:nowrap;} table.list td.hint{white-space:normal;min-width:110px;}
+  .tbl-wrap{overflow-x:auto;}
 
   @media (max-width:760px){
     #top{gap:3px 10px;padding:6px 16px;}
@@ -1007,14 +1015,80 @@ var GENERALS = [
   ['마량',30,88,85,85,'','양양',205],['마속',60,85,70,60,'','양양',210],['요화',75,60,50,55,'','양양',195],
   ['주창',80,30,20,40,'','여남',195],['법정',45,93,80,50,'','장안',193],['사마의',65,98,92,85,'','낙양',201],
   ['강유',90,90,75,80,'','천수',220],['유엽',25,85,72,60,'','수춘',195],['화흠',20,80,82,70,'','시상',194],
-  ['등지',50,80,80,75,'','성도',205],['을파소',30,93,96,88,'','국내성',191],['관평',80,60,50,70,'','평원',195],['장연',80,55,40,60,'','진양',190]
+  ['등지',50,80,80,75,'','성도',205],['을파소',30,93,96,88,'','국내성',191],['관평',80,60,50,70,'','평원',195],['장연',80,55,40,60,'','진양',190],
+
+  // ── 후계자 (반드시 목록 끝에 추가: 기존 저장의 장수 번호 유지) ──
+  // 소속 세력이 있고 등장 연도가 있으면, 그해에 군주가 있는 도시에 합류
+  ['손권',67,80,86,95,'손견','장사',196],['조비',72,76,78,72,'조조','진류',204],['조예',62,82,82,76,'조조','진류',222],
+  ['유선',30,32,40,62,'유비','평원',221],['원담',68,52,42,52,'원소','남피',195],['원상',72,50,45,66,'원소','남피',198],
+  ['유기',40,56,58,72,'유표','양양',195],['유종',30,50,52,56,'유표','양양',200],['공손연',72,64,58,50,'공손도','양평',210],
+  ['우위거',82,62,60,74,'고국천왕','국내성',225]
 ];
 
 // 군주 혈족·핵심 가신 (초기 충성 100)
 var KIN = ['손책','유장','마초','마휴','마대','공손강','공손공','공손월','공손속','하후돈','하후연','조인','조홍',
-           '관우','장비','사일','사휘','엄여','장위','연우','계수'];
+           '관우','장비','사일','사휘','엄여','장위','연우','계수',
+           '손권','조비','조예','유선','원담','원상','유기','유종','공손연','우위거'];
 // 초기 충성 고정값 (불안한 가신)
 var LOYAL = { '여포':60, '발기':55, '좌가려':45, '어비류':45 };
+
+// ───────── 수명: [출생, 사망, 추정(1)/사서(0), 고정 월(선택)] ─────────
+// 사서에 생년이 없는 인물은 활동 시기로 추정(추정=1). 사망 연도는 『삼국지』·『후한서』·『삼국사기』 기준
+var LIFE = {
+  '동탁':[139,192,1,4],'여포':[161,198,1],'이유':[150,200,1],'화웅':[155,191,1],'서영':[150,195,1],'장료':[169,222,0],
+  '고순':[160,198,1],'호진':[150,195,1],'이각':[150,198,1],'곽사':[150,197,1],'가후':[147,223,0],'이숙':[150,192,1],
+  '장제':[145,196,1],'번조':[150,195,1],'장수':[160,207,1],'우보':[155,192,1],'단외':[145,209,1],
+  '원소':[154,202,1],'안량':[160,200,1],'문추':[160,200,1],'전풍':[150,200,1],'봉기':[150,204,1],'허유':[150,204,1],
+  '곽도':[155,205,1],'고람':[160,210,1],'순심':[155,205,1],
+  '한복':[140,191,1],'장합':[167,231,1],'저수':[155,200,1],'심배':[150,204,1],'국의':[160,195,1],'경무':[150,191,1],'진림':[160,217,1],
+  '조조':[155,220,0],'하후돈':[160,220,1],'하후연':[162,219,1],'조인':[168,223,0],'조홍':[169,232,1],'악진':[160,218,1],
+  '이전':[174,209,1],'순욱':[163,212,0],'진궁':[155,198,1],
+  '손견':[155,191,0],'손책':[175,200,0],'정보':[150,215,1],'황개':[155,215,1],'한당':[160,227,1],'조무':[155,190,1],
+  '주치':[156,224,0],'오경':[150,203,1],
+  '유비':[161,223,0],'관우':[160,220,1],'장비':[165,221,1],'간옹':[160,215,1],
+  '공손찬':[150,199,1],'조운':[168,229,1],'공손월':[155,191,1],'전해':[160,199,1],'엄강':[160,191,1],'관정':[155,199,1],'공손속':[170,199,1],
+  '원술':[155,199,1],'기령':[160,199,1],'장훈':[160,200,1],'교유':[160,197,1],'뇌박':[160,200,1],'진란':[160,209,1],
+  '염상':[155,200,1],'양홍':[155,200,1],
+  '유표':[142,208,0],'채모':[160,220,1],'괴월':[155,214,1],'괴량':[155,200,1],'황조':[150,208,1],'장윤':[160,210,1],
+  '문빙':[165,230,1],'유반':[165,220,1],'한숭':[155,215,1],'왕위':[155,210,1],
+  '마등':[156,212,1],'마초':[176,222,0],'방덕':[170,219,1],'마대':[180,245,1],'마휴':[180,212,1],
+  '한수':[145,215,1],'염행':[165,230,1],'성의':[165,211,1],'양추':[160,220,1],'후선':[160,220,1],
+  '도겸':[132,194,0],'조표':[160,196,1],'진규':[150,200,1],'진등':[170,209,1],'미축':[165,221,1],'미방':[170,225,1],
+  '손건':[165,215,1],'조굉':[165,200,1],
+  '유언':[140,194,1],'유장':[162,219,1],'오의':[170,237,1],'장송':[170,212,1],'장임':[165,214,1],'이엄':[170,234,1],
+  '엄안':[150,220,1],'황권':[170,240,1],'냉포':[165,220,1],
+  '장로':[160,216,1],'장위':[165,215,1],'염포':[160,220,1],'양송':[160,220,1],'양앙':[165,215,1],'양임':[165,214,1],
+  '공손도':[150,204,1],'공손강':[175,221,1],'공손공':[180,240,1],
+  '공융':[153,208,0],'무안국':[160,210,1],'왕수':[160,215,1],
+  '엄백호':[150,196,1],'엄여':[155,196,1],'왕랑':[155,228,1],'우번':[164,233,0],
+  '사섭':[137,226,0],'사일':[140,225,1],'사휘':[175,226,1],'교모':[140,190,1],
+  '고국천왕':[155,197,1,5],'연우':[165,227,1],'계수':[165,220,1],'발기':[160,197,1,6],'고우루':[135,191,1],
+  '안류':[150,210,1],'좌가려':[150,191,1,4],'어비류':[145,191,1,4],'을파소':[140,203,1,8],
+  '전위':[165,197,1],'허저':[170,230,1],'곽가':[170,207,0],'정욱':[141,220,0],'순유':[157,214,0],'서황':[169,227,1],
+  '만총':[170,242,1],'우금':[160,221,1],'이통':[168,209,0],'장패':[165,230,1],'전예':[171,252,0],'장소':[156,236,0],
+  '장굉':[153,212,0],'제갈근':[174,241,0],'주유':[175,210,0],'노숙':[172,217,0],'여몽':[178,220,0],'태사자':[166,206,0],
+  '감녕':[170,222,1],'주태':[170,225,1],'장흠':[168,219,1],'능통':[189,217,0],'정봉':[190,271,1],'서성':[175,225,1],
+  '육손':[183,245,0],'황충':[148,220,1],'위연':[175,234,1],'제갈량':[181,234,0],'방통':[179,214,0],'서서':[175,234,1],
+  '마량':[187,222,0],'마속':[190,228,0],'요화':[185,264,1],'주창':[170,219,1],'법정':[176,220,0],'사마의':[179,251,0],
+  '강유':[202,264,0],'유엽':[175,234,1],'화흠':[157,232,0],'등지':[178,251,1],'관평':[178,220,1],'장연':[160,230,1],
+  '손권':[182,252,0],'조비':[187,226,0],'조예':[205,239,0],'유선':[207,271,0],'원담':[173,205,1],'원상':[180,207,1],
+  '유기':[175,209,1],'유종':[185,230,1],'공손연':[190,238,1],'우위거':[209,248,0]
+};
+// 군주 사망 시 승계 순서 (없으면 혈족 → 매력 최고 장수)
+var HEIR = { '동탁':['이각','곽사'], '손견':['손책','손권'], '손책':['손권'], '조조':['조비'], '조비':['조예'], '유비':['유선'], '원소':['원상','원담'],
+  '원상':['원담'], '유표':['유종','유기'], '유언':['유장'], '마등':['마초'], '공손도':['공손강'], '공손강':['공손공','공손연'],
+  '공손공':['공손연'], '사섭':['사휘','사일'], '고국천왕':['연우'], '산상왕':['우위거'], '장로':['장위'], '엄백호':['엄여'] };
+// 사서에 남은 사인 (사서 수명 모드에서만 사용)
+var CAUSE = { // [사인, 역사 속 소속 세력(이 세력에 있을 때만 사용)]
+  '동탁':['왕윤의 연환계로 여포에게 살해되었다','동탁'], '손견':['형주 원정 중 현산에서 화살에 맞아 전사했다','손견'],
+  '손책':['사냥 중 자객의 습격을 받아 세상을 떠났다','손견'], '관우':['형주에서 패해 사로잡혀 처형되었다','유비'],
+  '장비':['부하 장달·범강에게 살해되었다','유비'], '방통':['낙성 공격 중 화살에 맞아 전사했다','유비'],
+  '전위':['완성에서 조조를 지키다 전사했다','조조'], '하후연':['정군산에서 황충에게 베였다','조조'],
+  '안량':['백마에서 관우에게 베였다','원소'], '문추':['연진 싸움에서 전사했다','원소'],
+  '공손찬':['역경이 함락되자 스스로 목숨을 끊었다','공손찬'],
+  '좌가려':['연나부를 이끌고 난을 일으켰다가 진압되어 처형되었다','고국천왕'],
+  '어비류':['좌가려와 함께 난을 일으켰다가 진압되어 처형되었다','고국천왕'],
+  '발기':['왕위 다툼에 패해 스스로 목숨을 끊었다',null] };
 
 
 /* ───────────────────────── 유틸 ───────────────────────── */
@@ -1026,12 +1100,20 @@ function clamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
 function shuffle(a){ for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;} return a; }
 function esc(s){ return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
 function josa(s){
-  return String(s).replace(/(이\(가\)|을\(를\)|은\(는\)|와\(과\)|\(으\)로)/g, function(m, p, off, str){
+  return String(s).replace(/(이\(가\)|을\(를\)|은\(는\)|와\(과\)|과\(와\)|\(으\)로)/g, function(m, p, off, str){
     var i=off-1; if(str[i]===')'){ i--; }
-    var code=str.charCodeAt(i)-0xAC00; if(code<0||code>11171) return m;
-    var jong=code%28, has=jong>0;
+    var jong, has;
+    if(/[0-9]/.test(str[i])){ // 숫자 읽기: 십·백·천·만 단위 또는 끝자리
+      var num=''; for(var j=i;j>=0 && /[0-9,]/.test(str[j]);j--) num=str[j]+num; num=num.replace(/,/g,'');
+      if(/0000$/.test(num)) jong=4; else if(/000$/.test(num)) jong=4; else if(/00$/.test(num)) jong=1; else if(/0$/.test(num)) jong=17;
+      else jong={'1':8,'2':0,'3':16,'4':0,'5':0,'6':1,'7':8,'8':8,'9':0}[num.slice(-1)];
+      has=jong>0;
+    } else {
+      var code=str.charCodeAt(i)-0xAC00; if(code<0||code>11171) return m;
+      jong=code%28; has=jong>0;
+    }
     if(p==='(으)로') return (jong===0||jong===8)?'로':'으로';
-    return {'이(가)':has?'이':'가','을(를)':has?'을':'를','은(는)':has?'은':'는','와(과)':has?'과':'와'}[p];
+    return {'이(가)':has?'이':'가','을(를)':has?'을':'를','은(는)':has?'은':'는','와(과)':has?'과':'와','과(와)':has?'과':'와'}[p];
   });
 }
 function sleep(ms){ return new Promise(function(r){ setTimeout(r, AUTO?0:ms); }); }
@@ -1050,7 +1132,8 @@ var NC = D.cities.length;
 var S = null, SEL = null;
 
 function newState(pid){
-  S = { year:189, month:9, player:pid, factions:{}, cities:{}, gens:[], log:[], acted:{}, deleg:{}, over:false, ev:{} };
+  S = { year:189, month:9, player:pid, factions:{}, cities:{}, gens:[], log:[], acted:{}, deleg:{}, over:false, ev:{},
+        life:LIFE_MODE, ally:{}, distrust:{}, req:[], surrCD:{}, report:[], offers:[] };
   FACTIONS.forEach(function(f){ S.factions[f[0]] = { id:f[0], color:f[1], ruler:-1, alive:true }; });
   D.cities.forEach(function(c){
     var v = CITY_INIT[c.name];
@@ -1061,10 +1144,12 @@ function newState(pid){
   GENERALS.forEach(function(g,i){
     var fac = g[5] || null;
     var loyal = !fac ? 0 : (g[0]===fac || KIN.indexOf(g[0])>=0) ? 100 : LOYAL[g[0]] || ri(66,92);
-    S.gens.push({ id:i, name:g[0], war:g[1], int:g[2], pol:g[3], cha:g[4], fac:fac, city:g[6],
-                  appear:g[7]||0, loyal:loyal, status: fac?'active':'free' });
+    S.gens.push({ id:i, name:g[0], key:g[0], war:g[1], int:g[2], pol:g[3], cha:g[4], fac:fac, city:g[6],
+                  appear:g[7]||0, loyal:loyal, status: fac ? ((g[7]||0)>189 ? 'future' : 'active') : 'free' });
+    initLife(S.gens[i]);
     if (fac && g[0]===fac) S.factions[fac].ruler = i;
   });
+  initRel();
   addLog('189년 9월, 동탁이 낙양에 입성해 천자를 끼고 폭정을 일삼는다.', 'ev');
 }
 
@@ -1226,6 +1311,7 @@ function simulate(A, B, place){
 // 공격 실행 → 결과 적용. 포로 목록 반환
 function doAttack(fid, from, to, gids, sol, food){
   var cf=S.cities[from], ct=S.cities[to], defFac=ct.fac;
+  dipOnAttack(fid, defFac, to);
   sol=Math.min(sol, cf.soldiers); food=Math.min(food, cf.food);
   cf.soldiers-=sol; cf.food-=food;
   var A={ fac:fid, gens:gids.map(G), sol:sol, train:cf.train, food:food };
@@ -1262,7 +1348,7 @@ function doAttack(fid, from, to, gids, sol, food){
 }
 function destroyFaction(fid, by){
   var f=S.factions[fid]; if(!f.alive) return;
-  f.alive=false;
+  f.alive=false; dipCleanup(fid);
   addLog(facName(fid)+'이(가) 멸망했다.', 'ev');
   facCities(fid).forEach(function(cn){ S.cities[cn].fac=null; });
   S.gens.forEach(function(g){ if(g.fac===fid && g.status==='active'){ g.status='free'; g.fac=null; g.appear=0; } });
@@ -1314,13 +1400,17 @@ function aiCity(fid, cn, delegated){
     var ag = sorted.slice(0, Math.min(3, gs.length>1 ? gs.length-1 : 1));
     if(gs.length===1 && isRuler(gs[0])) ag = []; // 군주 혼자면 출진하지 않음
     if(ag.length){
+      var betray=null;
       enemies.forEach(function(n){
         var t=S.cities[n], tg=t.fac?gensIn(n,t.fac):[], ter=terrainOf(cn,n);
+        var promised = S.req.some(function(q){ return q.to===fid && q.target===n; });
         var dp = power(t.soldiers, tg, t.train) * (1+t.wall/150) * (ter?TERRAIN[ter.type].def:1);
         var ap = power(send, ag, c.train);
         var ratio = ap/Math.max(dp,1);
         if(t.fac==='동탁' && S.year===190) ratio*=1.2;
         if(!t.fac) ratio*=1.15;
+        if(t.fac && isAlly(fid,t.fac)){ if(!(ratio>3 && rel(fid,t.fac)<60 && Math.random()<0.15)) return; }
+        if(promised) ratio*=1.6;
         if(ratio>1.7 && ratio>bestR){ bestR=ratio; bestT=n; }
       });
       if(bestT && c.food > send*0.12 && Math.random()<0.5){
@@ -1359,7 +1449,7 @@ function aiCity(fid, cn, delegated){
 
 /* ───────────────────────── 월말·이벤트 ───────────────────────── */
 function monthEnd(){
-  fixStray();
+  fixStray(); dipMonthly();
   Object.keys(S.cities).forEach(function(cn){
     var c=S.cities[cn]; if(!c.fac) return;
     c.gold += Math.round(c.trade * c.pop/10000 * c.loyal/100 * 0.25);
@@ -1395,6 +1485,7 @@ function newMonth(){
     if(Math.random()<0.5){ c.pop=Math.round(c.pop*0.9); c.soldiers=Math.round(c.soldiers*0.92); addLog(cn+'에 역병이 돌았다.', 'war'); }
     else if(S.month>=6&&S.month<=8){ c.farm=Math.max(0,c.farm-8); addLog(cn+'에 홍수가 나 농지가 쓸려갔다.', 'war'); }
   }
+  activateFuture(); processDeaths();
   events();
 }
 function events(){
@@ -1408,42 +1499,432 @@ function events(){
     ca.soldiers+=Math.round(ly.soldiers*0.4); ly.soldiers=Math.round(ly.soldiers*0.6);
     addLog('동탁이 낙양을 불태우고 천자를 끼고 장안으로 천도했다.', 'ev');
   }
-  var gk = S.factions['고국천왕'];
-  if(gk.alive && S.year===191 && S.month===4 && !S.ev.jgr){ S.ev.jgr=1;
-    var reb = S.gens.filter(function(g){ return (g.name==='좌가려'||g.name==='어비류') && g.status==='active' && g.fac==='고국천왕'; });
-    if(reb.length){
-      reb.forEach(function(g){ var c=S.cities[g.city]; c.soldiers=Math.round(c.soldiers*0.9); c.loyal=Math.max(0,c.loyal-8); g.status='dead'; });
-      addLog('고구려: 연나부의 '+reb.map(function(g){return g.name;}).join('·')+'이(가) 난을 일으켰으나 고국천왕이 진압했다. 왕은 널리 인재를 구한다.', 'ev');
+}
+
+/* ───────────────────────── 수명·부고·승계 ───────────────────────── */
+var LIFE_MODE = 'real';   // 새 게임 선택값: 'real'(사서 몰년) | 'virtual'(60~80세)
+function nowK(){ return S.year*12 + S.month; }
+function setDeathK(g, k){ g.dy = Math.floor((k-1)/12); g.dm = ((k-1)%12)+1; }
+function initLife(g){
+  var L = LIFE[g.key] || [g.appear ? g.appear-20 : 160, 230, 1];
+  g.birth = L[0]; g.est = L[2];
+  if(S.life==='real'){ g.dy = L[1]; g.dm = L[3] || ri(1,12); }
+  else { g.dy = Math.max(L[0] + ri(60,80), S.year+1, (g.appear||0)+3); g.dm = ri(1,12); }
+}
+function ageOf(g){ return g.birth ? S.year - g.birth : null; }
+function ageStr(g){ var a=ageOf(g); return a==null ? '' : (g.est ? '약 ' : '')+a+'세'; }
+function rep(sec, text, cls){ var t=josa(text); S.report.push({ s:sec, t:t }); addLog(text, cls||'ev'); }
+function notable(g){ return g.war>=88 || g.int>=88 || g.pol>=88 || g.cha>=90; }
+
+function activateFuture(){
+  S.gens.forEach(function(g){
+    if(g.status!=='future' || g.appear>S.year) return;
+    var f = g.fac && S.factions[g.fac];
+    if(f && f.alive){
+      var r=G(f.ruler), city = (r && r.status==='active' && S.cities[r.city].fac===g.fac) ? r.city : facCities(g.fac)[0];
+      if(city){ g.status='active'; g.city=city;
+        if(g.fac===S.player) rep('mine', g.name+'이(가) 장성하여 '+city+'에서 우리 세력에 합류했다.', 'good');
+        return; }
     }
+    g.status='free'; g.fac=null; g.appear=0;
+  });
+}
+function processDeaths(){
+  var k=nowK();
+  S.gens.forEach(function(g){
+    if(g.dy==null || g.status==='dead') return;
+    if(g.dy*12+g.dm <= k) die(g);
+  });
+}
+function die(g){
+  var real = S.life==='real';
+  var cz = CAUSE[g.key], cause = (real && cz && (!cz[1] || g.fac===cz[1])) ? cz[0] : '병으로 세상을 떠났다';
+  var wasActive = g.status==='active', fac=g.fac, city=g.city, wasRuler = wasActive && isRuler(g);
+  var fname = fac ? facName(fac) : '';
+  g.status='dead';
+  if(!wasActive) return;
+  var age = ageStr(g), tail = age ? ' (향년 '+age+')' : '';
+  if(fac===S.player) rep('mine', city+' — '+g.name+'이(가) '+cause+'.'+tail, 'war');
+  else if(wasRuler || notable(g)) rep('world', fname+'의 '+g.name+'이(가) '+cause+'.'+tail);
+  // 사서 특수 처리
+  if(real && (g.key==='좌가려' || g.key==='어비류')){ var c=S.cities[city]; c.soldiers=Math.round(c.soldiers*0.95); c.loyal=Math.max(0,c.loyal-4); }
+  if(real && g.key==='동탁'){
+    var lb=S.gens.filter(function(x){ return x.key==='여포' && x.status==='active' && x.fac===fac; })[0];
+    if(lb){ lb.status='free'; lb.fac=null; lb.appear=0; rep(fac===S.player?'mine':'world', '동탁을 죽인 여포가 '+lb.city+'을(를) 떠나 재야로 나섰다.'); }
   }
-  if(gk.alive && S.year===197 && S.month===5 && !S.ev.ssw){ S.ev.ssw=1;
-    var king=G(gk.ruler);
-    if(king && king.name==='고국천왕' && king.status==='active'){
-      king.status='dead';
-      var yw=S.gens.filter(function(g){ return g.name==='연우' && g.status==='active' && g.fac==='고국천왕'; })[0];
-      var heir = yw || facGens('고국천왕').sort(function(a,b){ return b.cha-a.cha; })[0];
-      if(heir){ gk.ruler=heir.id; heir.loyal=100; if(heir.name==='연우') heir.name='산상왕';
-        addLog('고국천왕이 붕어하고 '+(heir.name==='산상왕'?'동생 연우가 산상왕으로':heir.name+'이(가)')+' 즉위했다.', 'ev');
-        var bg=S.gens.filter(function(g){ return g.name==='발기' && g.status==='active' && g.fac==='고국천왕'; })[0];
-        if(bg){
-          var gs=S.factions['공손도'], dest = gs && gs.alive ? facCities('공손도')[0] : null;
-          if(dest){ bg.fac='공손도'; bg.city=dest; bg.loyal=70; addLog('즉위에 반발한 발기가 요동의 '+facName('공손도')+'에 몸을 의탁했다.', 'ev'); }
-          else { bg.status='free'; bg.fac=null; bg.appear=0; addLog('즉위에 반발한 발기가 도성을 떠났다.', 'ev'); }
+  if(wasRuler) succeed(fac, g, fname);
+}
+function succeed(fid, old, fname){
+  var gs = facGens(fid), nr=null;
+  var list = HEIR[old.key] || HEIR[old.name] || [];
+  for(var i=0;i<list.length && !nr;i++) nr = gs.filter(function(x){ return x.key===list[i]; })[0] || null;
+  if(!nr) nr = gs.filter(function(x){ return KIN.indexOf(x.key)>=0; }).sort(function(a,b){ return b.cha-a.cha; })[0] || null;
+  if(!nr) nr = gs.slice().sort(function(a,b){ return b.cha-a.cha; })[0] || null;
+  var sec = fid===S.player ? 'mine' : 'world';
+  if(!nr){
+    rep(sec, fname+'은(는) 뒤를 이을 사람이 없어 해체되었다.', 'war');
+    S.factions[fid].alive=false;
+    facCities(fid).forEach(function(cn){ S.cities[cn].fac=null; });
+    dipCleanup(fid);
+    return;
+  }
+  S.factions[fid].ruler = nr.id; nr.loyal = 100;
+  gs.forEach(function(x){ if(x!==nr && KIN.indexOf(x.key)<0) x.loyal = Math.max(30, x.loyal - ri(0,8)); });
+  if(old.key==='고국천왕' && nr.key==='연우'){
+    nr.name='산상왕';
+    rep(sec, '고구려: 고국천왕의 동생 연우가 산상왕으로 즉위했다.');
+    var bg=S.gens.filter(function(x){ return x.key==='발기' && x.status==='active' && x.fac===fid; })[0];
+    if(bg){
+      var gsf=S.factions['공손도'], dest = gsf && gsf.alive ? facCities('공손도')[0] : null;
+      if(dest){ bg.fac='공손도'; bg.city=dest; bg.loyal=70; rep(sec, '즉위에 반발한 발기가 요동의 '+facName('공손도')+'에 몸을 의탁했다.'); }
+      else { bg.status='free'; bg.fac=null; bg.appear=0; rep(sec, '즉위에 반발한 발기가 도성을 떠났다.'); }
+    }
+  } else rep(sec, fname+': '+nr.name+'이(가) 뒤를 이었다.', fid===S.player?'good':'ev');
+}
+
+/* ───────────────────────── 외교 ───────────────────────── */
+var INIT_REL = [['동탁','*',25],['동탁','마등',40],['동탁','한수',40],['동탁','유언',40],['동탁','공손도',45],['동탁','사섭',50],
+  ['동탁','고국천왕',50],['동탁','장로',45],['원소','조조',75],['원소','공손찬',25],['원소','한복',45],['원소','원술',30],['원소','교모',60],
+  ['유비','공손찬',85],['유비','도겸',60],['유비','공융',70],['손견','원술',80],['손견','유표',20],['원술','유표',25],['원술','공손찬',65],
+  ['원술','조조',35],['원술','도겸',55],['마등','한수',75],['유언','장로',70],['유언','유표',35],['공손도','고국천왕',30],
+  ['조조','도겸',45],['조조','교모',55],['엄백호','왕랑',60]];
+var ALLY_MIN = 70, ALLY_MONTHS = 24;
+function rk(a,b){ return a<b ? a+'|'+b : b+'|'+a; }
+function rel(a,b){ var v=S.rel[rk(a,b)]; return v==null ? 50 : v; }
+function addRel(a,b,d){ S.rel[rk(a,b)] = clamp(Math.round(rel(a,b)+d), 0, 100); }
+function isAlly(a,b){ return !!a && !!b && a!==b && (S.ally[rk(a,b)]||0) > 0; }
+function initRel(){
+  S.rel={}; var ids=Object.keys(S.factions);
+  INIT_REL.forEach(function(r){
+    if(r[1]==='*') ids.forEach(function(x){ if(x!==r[0]) S.rel[rk(r[0],x)]=r[2]; });
+    else S.rel[rk(r[0],r[1])]=r[2];
+  });
+}
+function facSoldiers(f){ return facCities(f).reduce(function(a,n){ return a+S.cities[n].soldiers; },0); }
+function facPower(f){ return facSoldiers(f) + facCities(f).length*1000; }
+function facAdj(a,b){ return facCities(a).some(function(cn){ return ADJ[cn].some(function(n){ return S.cities[n].fac===b; }); }); }
+function commonEnemy(a,b){
+  var pa=facPower(a), pb=facPower(b);
+  return Object.keys(S.factions).some(function(x){ return x!==a && x!==b && S.factions[x].alive && facPower(x)>Math.max(pa,pb) && facAdj(a,x) && facAdj(b,x); });
+}
+function distrust(f){ return (S.distrust[f]||0) > 0 ? 0.2 : 0; }
+function capital(f){ var r=G(S.factions[f].ruler); return (r && r.status==='active' && S.cities[r.city] && S.cities[r.city].fac===f) ? r.city : facCities(f)[0]; }
+function envoyOf(f){ return facGens(f).sort(function(a,b){ return (b.cha+b.pol)-(a.cha+a.pol); })[0]; }
+function richest(f, k){ return facCities(f).sort(function(a,b){ return S.cities[b][k]-S.cities[a][k]; })[0]; }
+function foodMonths(f){ var s=facSoldiers(f)*FOOD_PER_SOLDIER; return s>0 ? facCities(f).reduce(function(a,n){ return a+S.cities[n].food; },0)/s : 99; }
+function foodValue(f){ var b=foodPrice({pol:50}).buy, m=foodMonths(f); return b * (m<6 ? 1.5 : m>24 ? 0.7 : 1); }
+function dipCleanup(f){
+  Object.keys(S.ally).forEach(function(k){ if(k.split('|').indexOf(f)>=0) delete S.ally[k]; });
+  S.req = S.req.filter(function(q){ return q.from!==f && q.to!==f; });
+  S.offers = S.offers.filter(function(o){ return o.from!==f; });
+}
+function breakAlly(f, t){
+  delete S.ally[rk(f,t)];
+  addRel(f,t,-50);
+  Object.keys(S.factions).forEach(function(x){ if(x!==f && x!==t && S.factions[x].alive) addRel(f,x,-15); });
+  S.distrust[f]=24;
+  rep('dip', facName(f)+'이(가) '+facName(t)+'과(와)의 동맹을 깼다.', 'war');
+}
+// 성공 확률
+function pAlly(f,t,g){ return clamp(0.35 + (rel(f,t)-ALLY_MIN)/60 + g.cha/400 + g.pol/600 - distrust(f) + (commonEnemy(f,t)?0.1:0) - (facPower(t)>facPower(f)*3?0.15:0), 0.05, 0.95); }
+function aidCapability(t, target){ // t가 target을 칠 수 있는 전력비
+  var tc=S.cities[target], tg=tc.fac?gensIn(target,tc.fac):[], best=0;
+  facCities(t).forEach(function(cn){ if(ADJ[cn].indexOf(target)<0) return;
+    var c=S.cities[cn], gs=gensIn(cn,t).sort(function(a,b){ return b.war-a.war; }).slice(0,3), ter=terrainOf(cn,target);
+    var r = power(c.soldiers*0.75, gs, c.train) / Math.max(1, power(tc.soldiers, tg, tc.train)*(1+tc.wall/150)*(ter?TERRAIN[ter.type].def:1));
+    if(r>best) best=r; });
+  return best;
+}
+function pAid(f,t,g,gold,target){
+  var p = clamp(0.25 + rel(f,t)/200 + gold/1500 + g.cha/400 - distrust(f), 0.05, 0.95);
+  if(target && t!==S.player) p *= clamp((aidCapability(t,target)-0.8)/1.0, 0.1, 1);
+  return p;
+}
+function surrOk(f,t){ return facCities(t).length<=2 && facSoldiers(f) >= 3*Math.max(1,facSoldiers(t)); }
+function pSurr(f,t,g){ // 막다른 처지일 때만 통함
+  var r=Math.min(10, facSoldiers(f)/Math.max(1,facSoldiers(t))), ts=facSoldiers(t);
+  var p = (r-3)*0.05 + (rel(f,t)-50)/200 + g.cha/450 - 0.12 - distrust(f);
+  if(facCities(t).length>1) p*=0.6;
+  if(ts>8000) p*=0.5; else if(ts<3000) p+=0.08;
+  return clamp(p, 0.01, 0.6);
+}
+function tradeAccept(t, give, get, g, f){ // t가 받는 것=give, t가 내주는 것=get
+  var fv=foodValue(t), vin = give.gold + give.food/100*fv, vout = get.gold + get.food/100*fv;
+  var need = vout * (1.1 - rel(f,t)/500 - g.pol/1000);
+  var have = (get.gold<= (S.cities[richest(t,'gold')]||{gold:0}).gold) && (get.food <= (S.cities[richest(t,'food')]||{food:0}).food);
+  return { ok: have && vin >= need, ratio: vin/Math.max(need,1), have:have };
+}
+function transfer(fromCity, toCity, gold, food){
+  var a=S.cities[fromCity], b=S.cities[toCity];
+  gold=Math.min(gold,a.gold); food=Math.min(food,a.food);
+  a.gold-=gold; b.gold+=gold; a.food-=food; b.food+=food;
+}
+// 실행 (f: 보내는 세력, t: 받는 세력) — 결과 문장 반환
+function doGift(f,t,g,amt,fromCity){
+  var c=S.cities[fromCity]; amt=Math.min(amt,c.gold); if(amt<50) return null;
+  transfer(fromCity, capital(t), amt, 0);
+  var inc=Math.max(1, Math.round(amt/40*(0.6+g.cha/200))); addRel(f,t,inc);
+  return facName(f)+'이(가) '+facName(t)+'에 금 '+fmt(amt)+'을(를) 보내 친선을 다졌다. (우호도 +'+inc+')';
+}
+function makeAlly(f,t){ S.ally[rk(f,t)]=ALLY_MONTHS; addRel(f,t,5); }
+function doAlly(f,t,g){
+  if(rel(f,t)<ALLY_MIN || isAlly(f,t)) return null;
+  if(Math.random()<pAlly(f,t,g)){ makeAlly(f,t); return { ok:true, t: facName(f)+'과(와) '+facName(t)+'이(가) 동맹을 맺었다. ('+ALLY_MONTHS+'개월)' }; }
+  addRel(f,t,-3); return { ok:false, t: facName(t)+'이(가) '+facName(f)+'의 동맹 제의를 거절했다.' };
+}
+function doTrade(f,t,g,give,get,fromCity){
+  var a=tradeAccept(t,give,get,g,f);
+  if(!a.ok){ return { ok:false, t: facName(t)+'이(가) '+facName(f)+'의 교환 제의를 거절했다.' }; }
+  if(give.gold||give.food) transfer(fromCity, capital(t), give.gold, give.food);
+  if(get.gold) transfer(richest(t,'gold'), fromCity, get.gold, 0);
+  if(get.food) transfer(richest(t,'food'), fromCity, 0, get.food);
+  addRel(f,t,2);
+  var desc=function(x){ return [x.gold?'금 '+fmt(x.gold):'', x.food?'군량 '+fmt(x.food):''].filter(Boolean).join('·'); };
+  return { ok:true, t: facName(f)+'이(가) '+facName(t)+'에 '+desc(give)+'을(를) 주고 '+desc(get)+'을(를) 받았다.' };
+}
+function aidTargets(f,t){ // t가 공격할 수 있는 f의 적 도시
+  var out={};
+  facCities(t).forEach(function(cn){ ADJ[cn].forEach(function(n){ var x=S.cities[n].fac;
+    if(x && x!==f && x!==t && !isAlly(t,x) && !isAlly(f,x)) out[n]=1; }); });
+  return Object.keys(out);
+}
+function doAid(f,t,g,target,gold,fromCity){
+  if(!isAlly(f,t)) return null;
+  if(Math.random()<pAid(f,t,g,gold,target)){
+    if(gold) transfer(fromCity, capital(t), gold, 0);
+    S.req.push({ from:f, to:t, target:target, until: nowK()+3 });
+    return { ok:true, t: facName(f)+'이(가) '+facName(t)+'에 '+target+' 공격을 요청했고, '+facName(t)+'이(가) 수락했다.' };
+  }
+  addRel(f,t,-2); return { ok:false, t: facName(t)+'이(가) '+facName(f)+'의 원군 요청을 거절했다.' };
+}
+function absorb(f,t){
+  var tn=facName(t), cs=facCities(t);
+  cs.forEach(function(cn){ S.cities[cn].fac=f; });
+  S.gens.forEach(function(x){ if(x.fac===t && (x.status==='active' || x.status==='future')){ x.fac=f; x.loyal = ri(58,75); } });
+  S.factions[t].alive=false; dipCleanup(t);
+  return tn+'이(가) '+facName(f)+'의 항복권고를 받아들여 귀순했다. ('+cs.join('·')+' 편입)';
+}
+function doSurr(f,t,g){
+  if(!surrOk(f,t)) return null;
+  if(Math.random()<pSurr(f,t,g)){ var tx=absorb(f,t); S.surrCD[f]=6; return { ok:true, t:tx }; }
+  addRel(f,t,-10); return { ok:false, t: facName(t)+'이(가) '+facName(f)+'의 항복권고를 거부했다.' };
+}
+
+// 매월: 우호도 회복, 동맹 기간, 약속 만료
+function dipMonthly(){
+  Object.keys(S.rel).forEach(function(k){ var p=k.split('|'), v=S.rel[k], tgt = (S.ally[k]||0)>0 ? 75 : 50;
+    if(v<tgt) S.rel[k]=v+1; else if(v>tgt) S.rel[k]=v-1; });
+  Object.keys(S.distrust).forEach(function(f){ if(S.distrust[f]>0) S.distrust[f]--; });
+  Object.keys(S.surrCD).forEach(function(f){ if(S.surrCD[f]>0) S.surrCD[f]--; });
+  Object.keys(S.ally).forEach(function(k){
+    S.ally[k]--; if(S.ally[k]>0) return;
+    var p=k.split('|'); delete S.ally[k];
+    if(!S.factions[p[0]].alive || !S.factions[p[1]].alive) return;
+    if(p.indexOf(S.player)<0 && rel(p[0],p[1])>=ALLY_MIN && Math.random()<0.7){ S.ally[k]=ALLY_MONTHS; rep('dip', facName(p[0])+'과(와) '+facName(p[1])+'이(가) 동맹을 갱신했다.'); }
+    else rep('dip', facName(p[0])+'과(와) '+facName(p[1])+'의 동맹 기간이 끝났다.');
+  });
+  var k=nowK();
+  S.req = S.req.filter(function(q){
+    if(k <= q.until) return true;
+    if(!S.factions[q.from].alive || !S.factions[q.to].alive) return false;
+    addRel(q.from, q.to, q.to===S.player ? -20 : -10);
+    rep('dip', facName(q.to)+'이(가) '+facName(q.from)+'과(와) 약속한 '+q.target+' 공격을 지키지 않았다.'+(q.to===S.player?' (우호도 -20)':''), 'war');
+    return false;
+  });
+}
+// 공격 시 외교 반영 (doAttack에서 호출)
+function dipOnAttack(att, def, to){
+  if(!def) return;
+  if(isAlly(att,def)) breakAlly(att,def);
+  addRel(att,def,-20);
+  S.req = S.req.filter(function(q){
+    if(q.to===att && q.target===to){ addRel(q.from, att, 10); rep('dip', facName(att)+'이(가) '+facName(q.from)+'의 요청에 따라 '+to+'을(를) 공격했다.'); return false; }
+    return true;
+  });
+}
+
+// AI 외교 (턴마다 세력별 최대 1건)
+function offer(o){ if(S.offers.length) return false; S.offers.push(o); return true; }
+function aiDiplomacy(){
+  var ids = shuffle(Object.keys(S.factions).filter(function(f){ return f!==S.player && S.factions[f].alive; }));
+  ids.forEach(function(f){
+    if(!S.factions[f].alive || Math.random()>0.22) return;
+    var g=envoyOf(f); if(!g) return;
+    var from=g.city, others=Object.keys(S.factions).filter(function(x){ return x!==f && S.factions[x].alive; });
+    // 1) 항복권고
+    if(!(S.surrCD[f]>0)){
+      var st = others.filter(function(t){ return surrOk(f,t) && facAdj(f,t) && (t===S.player ? pSurr(f,t,g)>=0.15 : true); })[0];
+      if(st){
+        if(st===S.player){ if(offer({ type:'surr', from:f })) rep('dip', facName(f)+'이(가) 우리에게 항복을 권고해 왔다.'); }
+        else if(pSurr(f,st,g)>=0.08){ var r=doSurr(f,st,g); if(r) rep('dip', r.t, r.ok?'war':'ev'); }
+        else st=null;
+        if(st) return;
+      }
+    }
+    // 2) 동맹
+    var at = others.filter(function(t){ return !isAlly(f,t) && rel(f,t)>=ALLY_MIN && (commonEnemy(f,t) || facAdj(f,t)); })[0];
+    if(at && Math.random()<0.6){
+      if(at===S.player){ if(offer({ type:'ally', from:f })) rep('dip', facName(f)+'이(가) 우리에게 동맹을 제의해 왔다.'); }
+      else { var r2=doAlly(f,at,g); if(r2) rep('dip', r2.t); }
+      return;
+    }
+    // 3) 원군 요청
+    var allies = others.filter(function(t){ return isAlly(f,t); });
+    for(var i=0;i<allies.length;i++){
+      var t=allies[i], tg=aidTargets(f,t).filter(function(n){ var x=S.cities[n].fac; return rel(f,x)<45 && facAdj(f,x); });
+      if(tg.length && !S.req.some(function(q){ return q.from===f; }) && Math.random()<0.5){
+        var gold = Math.min(300, Math.floor(S.cities[from].gold*0.3));
+        if(t===S.player){ if(offer({ type:'aid', from:f, target:tg[0], gold:gold, city:from })) rep('dip', facName(f)+'이(가) 우리에게 '+tg[0]+' 공격을 요청해 왔다.'); }
+        else { var r3=doAid(f,t,g,tg[0],gold,from); if(r3) rep('dip', r3.t); }
+        return;
+      }
+    }
+    // 4) 군량 구매
+    if(foodMonths(f)<4 && S.cities[from].gold>600){
+      var sellers = others.filter(function(t){ return (rel(f,t)>=45 || isAlly(f,t)) && foodMonths(t)>12; });
+      var sl=sellers[0];
+      if(sl){
+        var pay=400, want=Math.floor(pay/foodValue(sl)*100*0.95/100)*100;
+        if(sl===S.player){ if(offer({ type:'trade', from:f, give:{gold:pay,food:0}, get:{gold:0,food:want}, city:from })) rep('dip', facName(f)+'이(가) 우리에게 금 '+pay+'으로 군량 '+fmt(want)+'을(를) 사겠다고 제의해 왔다.'); }
+        else { var r4=doTrade(f,sl,g,{gold:pay,food:0},{gold:0,food:want},from); if(r4.ok) rep('dip', r4.t); }
+        return;
+      }
+    }
+    // 5) 친선
+    var strong = others.filter(function(t){ return facAdj(f,t) && facPower(t)>facPower(f)*1.5 && rel(f,t)<45; })[0];
+    if(strong && S.cities[from].gold>1500 && Math.random()<0.35){ var tx=doGift(f,strong,g,300,from); if(tx) rep('dip', tx); }
+  });
+}
+// 플레이어가 받은 제안 처리
+function resolveOffer(o, yes){
+  var f=o.from, P=S.player;
+  if(!S.factions[f] || !S.factions[f].alive) return;
+  if(o.type==='surr'){ addRel(f,P,-5); addLog(facName(f)+'의 항복권고를 거절했다.'); return; }
+  if(!yes){ addRel(f,P,-3); addLog(facName(f)+'의 제의를 거절했다.'); return; }
+  if(o.type==='ally'){ makeAlly(f,P); addLog(facName(f)+'과(와) 동맹을 맺었다. ('+ALLY_MONTHS+'개월)', 'good'); }
+  if(o.type==='aid'){ var cap=capital(P); if(o.gold) transfer(o.city, cap, o.gold, 0);
+    S.req.push({ from:f, to:P, target:o.target, until: nowK()+3 });
+    addLog(facName(f)+'의 요청을 수락했다. 3개월 안에 '+o.target+'을(를) 공격해야 한다.'+(o.gold?' (금 '+o.gold+' 받음)':''), 'good'); }
+  if(o.type==='trade'){
+    var src=richest(P,'food');
+    if(!src || S.cities[src].food < o.get.food){ addLog('군량이 모자라 '+facName(f)+'과(와)의 교환을 할 수 없었다.', 'war'); return; }
+    transfer(src, o.city, 0, o.get.food); transfer(o.city, src, o.give.gold, 0); addRel(f,P,3);
+    addLog(src+'의 군량 '+fmt(o.get.food)+'을(를) '+facName(f)+'에 넘기고 금 '+fmt(o.give.gold)+'을(를) 받았다.', 'good');
+  }
+}
+// 예전 저장 보충
+function migrate(){
+  if(!S.life) S.life='real';
+  for(var i=S.gens.length;i<GENERALS.length;i++){
+    var g0=GENERALS[i], fac=g0[5]||null;
+    S.gens.push({ id:i, name:g0[0], key:g0[0], war:g0[1], int:g0[2], pol:g0[3], cha:g0[4], fac:fac, city:g0[6], appear:g0[7]||0,
+      loyal: fac ? (KIN.indexOf(g0[0])>=0?100:ri(66,92)) : 0, status: fac ? ((g0[7]||0)>S.year ? 'future' : 'active') : 'free' });
+    if(fac && S.gens[i].status==='active'){ var f=S.factions[fac]; if(!f || !f.alive){ S.gens[i].status='free'; S.gens[i].fac=null; } else S.gens[i].city=capital(fac)||g0[6]; }
+  }
+  var k=nowK();
+  S.gens.forEach(function(g){
+    if(!g.key) g.key = GENERALS[g.id] ? GENERALS[g.id][0] : g.name;
+    if(g.dy==null){ initLife(g); if(g.status!=='dead' && g.dy*12+g.dm <= k) setDeathK(g, k+ri(1,6)); }
+  });
+  if(!S.rel) initRel();
+  S.ally=S.ally||{}; S.distrust=S.distrust||{}; S.req=S.req||[]; S.surrCD=S.surrCD||{}; S.report=S.report||[]; S.offers=S.offers||[];
+}
+async function showReport(){
+  var rp=S.report.splice(0), of=S.offers.splice(0,1)[0];
+  if(!rp.length && !of) return;
+  var sec=function(key, title){ var a=rp.filter(function(x){return x.s===key;}); return a.length ? '<div class="sect">'+title+'</div><ul class="rep">'+a.map(function(x){return '<li>'+esc(x.t)+'</li>';}).join('')+'</ul>' : ''; };
+  var html = sec('mine','아군 소식') + sec('world','각지 부고·승계') + sec('dip','외교 소식');
+  var btns=[{label:'확인', v:1, primary:true}];
+  if(of){
+    var f=of.from, desc = of.type==='ally' ? facName(f)+'이(가) 동맹('+ALLY_MONTHS+'개월)을 제의했습니다.' :
+      of.type==='aid' ? facName(f)+'이(가) '+of.target+' 공격을 요청했습니다.'+(of.gold?' 금 '+of.gold+'을(를) 사례로 보냅니다.':'')+' 수락하면 3개월 안에 공격해야 합니다.' :
+      of.type==='trade' ? facName(f)+'이(가) 금 '+fmt(of.give.gold)+'으로 군량 '+fmt(of.get.food)+'을(를) 사겠다고 합니다.' :
+      facName(f)+'이(가) 항복을 권고했습니다. "대세는 이미 기울었소. 귀순하면 후하게 대우하겠소."';
+    html += '<div class="sect">제안</div><div class="offer"><i style="background:'+facColor(f)+'"></i><span>'+esc(josa(desc))+'</span><span class="hint">우호도 '+rel(f,S.player)+'</span></div>';
+    btns = of.type==='surr' ? [{label:'거절', v:0, primary:true}] : [{label:'거절', v:0},{label:'수락', v:1, primary:true}];
+  }
+  var v = await modal({ title:'전령 보고 — '+dateStr(), html:html, buttons:btns });
+  if(of) resolveOffer(of, v===1);
+  render();
+}
+
+/* ───────────────────────── 외교 화면 ───────────────────────── */
+async function uiDiplomacy(cn){
+  var P=S.player, fs=Object.keys(S.factions).filter(function(x){ return x!==P && S.factions[x].alive; })
+    .sort(function(a,b){ return (facAdj(P,b)-facAdj(P,a)) || rel(P,b)-rel(P,a); });
+  if(!fs.length) return;
+  var t=fs[0], act='gift';
+  var ACTS=[['gift','친선','금을 보내 우호도를 올립니다'],['ally','동맹','우호도 '+ALLY_MIN+' 이상 필요 · '+ALLY_MONTHS+'개월 불가침'],
+    ['trade','금·군량 교환','상대가 손익을 따져 수락·거절'],['aid','원군 요청','동맹에게 적 도시 공격 요청 · 3개월 내'],['surr','항복권고','상대 도시 2곳 이하, 내 병력 3배 이상']];
+  function avail(a){ if(a==='ally') return isAlly(P,t) ? '이미 동맹 중 (제의하면 기간 갱신)' : rel(P,t)<ALLY_MIN ? '우호도 부족 ('+rel(P,t)+'/'+ALLY_MIN+')' : '';
+    if(a==='aid') return !isAlly(P,t) ? '동맹 세력에게만 가능' : !aidTargets(P,t).length ? '상대가 공격할 수 있는 적 도시가 없음' : '';
+    if(a==='surr') return !surrOk(P,t) ? '조건 미달 (도시 '+facCities(t).length+'곳, 병력비 '+(facSoldiers(P)/Math.max(1,facSoldiers(t))).toFixed(1)+'배)' : '';
+    return ''; }
+  var v1 = await modal({ title:'외교 — 대상과 방법', wide:true, html:
+      '<div class="sect">방법</div><div id="da"></div>'+'<div class="sect">대상 세력</div><div id="dl">'+fs.map(function(x){ var al=S.ally[rk(P,x)]||0;
+        return '<div class="target'+(x===t?' sel':'')+'" data-f="'+x+'"><i style="background:'+facColor(x)+'"></i><div><b>'+esc(facTitle(x))+'</b>'+(al?' <span class="hint">동맹 '+al+'개월</span>':'')+(facAdj(P,x)?' <span class="hint">· 인접</span>':'')+
+          '<div class="bar" style="width:120px"><i style="width:'+rel(P,x)+'%"></i></div></div><span class="meta">우호도 '+rel(P,x)+'<br>도시 '+facCities(x).length+' · 병력 '+fmt(facSoldiers(x))+'</span></div>'; }).join('')+'</div>'+
+      +(distrust(P)?'<p class="errline">동맹을 깬 지 얼마 안 되어 외교 성공률이 낮습니다 ('+S.distrust[P]+'개월 남음).</p>':''),
+    mount:function(b){
+      function drawActs(){ b.querySelector('#da').innerHTML=ACTS.map(function(a){ var why=avail(a[0]);
+        return '<div class="target'+(a[0]===act?' sel':'')+(why?' off':'')+'" data-a="'+a[0]+'"><b>'+a[1]+'</b><span class="meta">'+(why||a[2])+'</span></div>'; }).join('');
+        b.querySelectorAll('[data-a]').forEach(function(el){ el.onclick=function(){ if(el.classList.contains('off')) return; act=el.dataset.a; drawActs(); }; }); }
+      b.querySelectorAll('[data-f]').forEach(function(el){ el.onclick=function(){ t=el.dataset.f; b.querySelectorAll('[data-f]').forEach(function(x){ x.classList.toggle('sel',x===el); }); if(avail(act)) act='gift'; drawActs(); }; });
+      drawActs(); },
+    buttons:[{label:'취소', v:null},{label:'다음', primary:true, get:function(){ return avail(act) ? false : {t:t, act:act}; }}] });
+  if(!v1) return;
+  t=v1.t; act=v1.act;
+  var c=S.cities[cn], gs=gensIn(cn,P), p=genPicker(gs,{key: act==='trade'?'pol':'cha'}), extra='';
+  if(act==='gift') extra='<div class="field"><label><span>보낼 금</span><b id="xv"></b></label><input type="range" id="xr" min="50" max="'+Math.max(50,c.gold)+'" step="50" value="'+Math.min(300,c.gold)+'"></div>';
+  if(act==='trade') extra='<div class="target sel" data-m="buy"><b>금을 주고 군량 받기</b></div><div class="target" data-m="sell"><b>군량을 주고 금 받기</b></div>'+
+    '<div class="field"><label><span>내가 줄 양</span><b id="gv"></b></label><input type="range" id="gr" min="0" step="10" value="0"></div>'+
+    '<div class="field"><label><span>받을 양</span><b id="rv"></b></label><input type="range" id="rr" min="0" step="100" value="0"></div>';
+  if(act==='aid'){ var tg=aidTargets(P,t); extra='<div class="sect">공격을 요청할 도시</div>'+tg.map(function(n,i){ var x=S.cities[n].fac; return '<div class="target'+(i?'':' sel')+'" data-t="'+n+'"><i style="background:'+facColor(x)+'"></i><b>'+n+'</b> <span class="hint">'+esc(facName(x))+'</span><span class="meta">병력 '+fmt(S.cities[n].soldiers)+'</span></div>'; }).join('')+
+    '<div class="field"><label><span>사례금</span><b id="xv"></b></label><input type="range" id="xr" min="0" max="'+c.gold+'" step="50" value="'+Math.min(200,c.gold)+'"></div>'; }
+  var tradeMode='buy', aidT = act==='aid' ? aidTargets(P,t)[0] : null;
+  var names={gift:'친선',ally:'동맹 제의',trade:'금·군량 교환',aid:'원군 요청',surr:'항복권고'};
+  var v2 = await modal({ title:names[act]+' — '+facTitle(t)+' (우호도 '+rel(P,t)+')', wide:true, html:
+      extra+'<div class="sect">사자</div>'+p.html+'<div class="hint" id="est" style="margin-top:6px"></div>',
+    mount:function(b){
+      function upd(){
+        var g=G(p.sel[0]), e=b.querySelector('#est'), xr=b.querySelector('#xr');
+        if(xr) b.querySelector('#xv').textContent=fmt(xr.value);
+        if(act==='gift') e.textContent='예상 우호도 +'+Math.max(1,Math.round(xr.value/40*(0.6+g.cha/200)));
+        if(act==='ally') e.textContent='성공 가능성 약 '+Math.round(pAlly(P,t,g)*100)+'%';
+        if(act==='surr') e.textContent='성공 가능성 약 '+Math.round(pSurr(P,t,g)*100)+'% · 실패하면 우호도 -10';
+        if(act==='aid') e.textContent='수락 가능성 약 '+Math.round(pAid(P,t,g,+xr.value,aidT)*100)+'% · 상대의 공격 여력 '+(aidCapability(t,aidT)>=1.4?'충분':aidCapability(t,aidT)>=1?'보통':'부족');
+        if(act==='trade'){
+          var gr=b.querySelector('#gr'), rr=b.querySelector('#rr'), fv=foodValue(t);
+          if(tradeMode==='buy'){ gr.max=c.gold; gr.step=10; rr.max=Math.max(0,S.cities[richest(t,'food')].food); rr.step=100; }
+          else { gr.max=c.food; gr.step=100; rr.max=Math.max(0,S.cities[richest(t,'gold')].gold); rr.step=10; }
+          b.querySelector('#gv').textContent=(tradeMode==='buy'?'금 ':'군량 ')+fmt(gr.value);
+          b.querySelector('#rv').textContent=(tradeMode==='buy'?'군량 ':'금 ')+fmt(rr.value);
+          var give = tradeMode==='buy' ? {gold:+gr.value,food:0} : {gold:0,food:+gr.value}, get = tradeMode==='buy' ? {gold:0,food:+rr.value} : {gold:+rr.value,food:0};
+          var a=tradeAccept(t,give,get,g,P);
+          e.textContent = !a.have ? '상대에게 그만한 물자가 없습니다.' : '상대 반응: '+(a.ratio>=1.15?'흔쾌히 수락할 듯':a.ratio>=1?'수락할 듯':a.ratio>=0.85?'망설일 듯 (거절 가능성 높음)':'거절할 듯')+' · 상대의 군량 시세 100당 금 '+fv.toFixed(1);
         }
-      } else destroyFaction('고국천왕');
-    }
-  }
-  if(S.year===192 && S.month===4 && !S.ev.dz && S.player!=='동탁' && dz.alive){
-    var dg=G(dz.ruler); S.ev.dz=1;
-    if(dg && dg.name==='동탁' && dg.status==='active'){
-      dg.status='dead';
-      var lb=S.gens.filter(function(g){ return g.name==='여포' && g.status==='active' && g.fac==='동탁'; })[0];
-      if(lb){ lb.status='free'; lb.fac=null; lb.appear=0; }
-      var cand=facGens('동탁'); var nr = cand.filter(function(g){return g.name==='이각';})[0] || cand.sort(function(a,b){return b.cha-a.cha;})[0];
-      if(nr){ dz.ruler=nr.id; nr.loyal=100; addLog('왕윤의 연환계로 여포가 동탁을 죽였다! 잔당은 '+nr.name+'이(가) 이끈다.', 'ev'); }
-      else destroyFaction('동탁');
-    }
-  }
+      }
+      p.bind(b, upd);
+      b.querySelectorAll('[data-m]').forEach(function(el){ el.onclick=function(){ tradeMode=el.dataset.m; b.querySelectorAll('[data-m]').forEach(function(x){ x.classList.toggle('sel',x===el); }); b.querySelector('#gr').value=0; b.querySelector('#rr').value=0; upd(); }; });
+      b.querySelectorAll('[data-t]').forEach(function(el){ el.onclick=function(){ aidT=el.dataset.t; b.querySelectorAll('[data-t]').forEach(function(x){ x.classList.toggle('sel',x===el); }); upd(); }; });
+      b.querySelectorAll('input[type=range]').forEach(function(r){ r.oninput=upd; });
+      upd(); },
+    buttons:[{label:'취소', v:null},{label:'사자 파견', primary:true, get:function(b){
+      var o={ g:p.sel[0] }; var xr=b.querySelector('#xr'); if(xr) o.x=+xr.value;
+      if(act==='trade'){ var gv=+b.querySelector('#gr').value, rv=+b.querySelector('#rr').value; if(!gv && !rv) return false;
+        o.give = tradeMode==='buy' ? {gold:gv,food:0} : {gold:0,food:gv}; o.get = tradeMode==='buy' ? {gold:0,food:rv} : {gold:rv,food:0}; }
+      return o; }}] });
+  if(!v2) return;
+  var g=G(v2.g), res;
+  if(act==='gift'){ var tx=doGift(P,t,g,v2.x,cn); res = tx ? {ok:true,t:tx} : null; }
+  if(act==='ally') res = isAlly(P,t) ? (Math.random()<pAlly(P,t,g) ? (S.ally[rk(P,t)]=ALLY_MONTHS, {ok:true,t:facName(t)+'과(와)의 동맹을 '+ALLY_MONTHS+'개월 연장했다.'}) : {ok:false,t:facName(t)+'이(가) 동맹 연장을 거절했다.'}) : doAlly(P,t,g);
+  if(act==='trade') res = doTrade(P,t,g,v2.give,v2.get,cn);
+  if(act==='aid') res = doAid(P,t,g,aidT,v2.x,cn);
+  if(act==='surr') res = doSurr(P,t,g);
+  if(!res) return;
+  S.acted[cn]=true; addLog(cn+': '+g.name+' 파견 — '+res.t, res.ok?'good':'war');
+  await modal({ title: res.ok ? '외교 성공' : '외교 실패', html:'<p>'+esc(josa(res.t))+'</p>', buttons:[{label:'확인', v:1, primary:true}] });
+  if(!checkEnd()) render();
 }
 
 /* ───────────────────────── 턴 진행 ───────────────────────── */
@@ -1453,6 +1934,8 @@ async function endTurn(){
   try{
     // 위임 도시
     facCities(S.player).forEach(function(cn){ if(S.deleg[cn] && !S.acted[cn]) aiCity(S.player, cn, true); });
+    // AI 외교
+    aiDiplomacy();
     // AI 세력
     var order = shuffle(Object.keys(S.factions).filter(function(k){ return k!==S.player && S.factions[k].alive; }));
     for(var i=0;i<order.length;i++){
@@ -1472,12 +1955,14 @@ async function endTurn(){
     if(checkEnd()) { render(); return; }
     try{ localStorage.setItem('sgz-auto', JSON.stringify(S)); }catch(e){}
     render();
+    await showReport();
+    if(checkEnd()) render();
   } finally { BUSY=false; }
 }
 function checkEnd(){
   if(S.over) return true;
   if(facCities(S.player).length===0){ S.over=true; render();
-    modal({ title:'패배', html:'<p>'+facName(S.player)+'의 모든 도시를 잃었습니다. '+dateStr()+', 천하의 꿈은 여기서 끝났습니다.</p>', buttons:[{label:'새 게임', primary:true, v:1}] }).then(startScreen); return true; }
+    modal({ title:'패배', html:'<p>'+(S.factions[S.player].alive ? facName(S.player)+'의 모든 도시를 잃었습니다. ' : '군주의 뒤를 이을 사람이 없어 세력이 해체되었습니다. ')+dateStr()+', 천하의 꿈은 여기서 끝났습니다.</p>', buttons:[{label:'새 게임', primary:true, v:1}] }).then(startScreen); return true; }
   if(facCities(S.player).length===NC){ S.over=true; render();
     modal({ title:'천하통일', html:'<p>'+dateStr()+', '+facName(S.player)+'이(가) '+NC+'개 도시를 모두 평정했습니다. 천하가 하나로 돌아왔습니다!</p>', buttons:[{label:'새 게임', primary:true, v:1}] }).then(startScreen); return true; }
   return false;
@@ -1627,7 +2112,7 @@ async function uiAttack(cn){
   var gs=gensIn(cn,S.player), p=genPicker(gs,{key:'war', multi:true, max:5, pre:[gs.slice().sort(function(a,b){return b.war-a.war;})[0].id]});
   var to=tg[0];
   var th = tg.map(function(n,i){ var t=S.cities[n], ter=terrainOf(cn,n);
-    return '<div class="target'+(i===0?' sel':'')+'" data-t="'+n+'"><i style="background:'+facColor(t.fac)+'"></i><div><b>'+n+'</b> <span class="hint">'+facName(t.fac)+'</span>'+
+    return '<div class="target'+(i===0?' sel':'')+'" data-t="'+n+'"><i style="background:'+facColor(t.fac)+'"></i><div><b>'+n+'</b> <span class="hint">'+facName(t.fac)+(isAlly(S.player,t.fac)?' · 동맹':'')+(S.req.some(function(q){return q.to===S.player&&q.target===n;})?' · 원군 약속':'')+'</span>'+
       (ter?'<div class="hint">경유 전장: '+ter.name+' ('+ter.type+')</div>':'')+'</div><span class="meta">병력 '+fmt(t.soldiers)+' · 훈련 '+t.train+'<br>성벽 '+t.wall+' · 장수 '+(t.fac?gensIn(n,t.fac).length:0)+'</span></div>'; }).join('');
   var defS=Math.floor(c.soldiers*0.8), defF=Math.min(c.food, Math.round(defS*0.12));
   var v=await modal({ title:'출진 — '+cn, wide:true, html:
@@ -1649,6 +2134,12 @@ async function uiAttack(cn){
         if(+b.querySelector('#sr').value<500){ er.textContent='병력을 500 이상 보내야 합니다.'; return false; }
         return {to:to, gids:p.sel.slice(), s:+b.querySelector('#sr').value, f:+b.querySelector('#fr').value}; }}] });
   if(!v) return;
+  var tf=S.cities[v.to].fac;
+  if(tf && isAlly(S.player, tf)){
+    var ok = await modal({ title:'동맹 파기', html:'<p>'+esc(josa(facName(tf)+'과(와)는 동맹 중입니다. 동맹을 깨고 공격하시겠습니까?'))+'</p><p class="hint">모든 세력의 우호도가 15 떨어지고, 24개월 동안 외교 성공률이 낮아집니다.</p>',
+      buttons:[{label:'그만두기', v:0, primary:true},{label:'동맹을 깨고 공격', v:1}] });
+    if(ok!==1) return;
+  }
   S.acted[cn]=true;
   var r=doAttack(S.player, cn, v.to, v.gids, v.s, v.f);
   render();
@@ -1778,7 +2269,8 @@ function render(){
   document.getElementById('t-sol').textContent=fmt(sum('soldiers'));
   Object.keys(S.cities).forEach(function(cn){
     var c=S.cities[cn], mine=c.fac===pf, doneC=mine&&(S.acted[cn]||S.deleg[cn]);
-    MK[cn].setStyle({ fillColor:facColor(c.fac), color: mine?'#7e2c21':'#2b211a', weight: mine?3:1.5, radius: mine?10:8 });
+    var al = !mine && c.fac && isAlly(pf, c.fac);
+    MK[cn].setStyle({ fillColor:facColor(c.fac), color: mine?'#7e2c21':al?'#1f5a8a':'#2b211a', weight: mine||al?3:1.5, radius: mine?10:8, dashArray: al?'3,3':null });
     if(HIT[cn].getTooltip()) HIT[cn].setTooltipContent(cn+' — '+facName(c.fac)+' · 병력 '+fmt(c.soldiers));
     LB[cn].setIcon(L.divIcon({className:'',iconSize:[0,0],iconAnchor:[-12,8],
       html:'<div class="city-label'+(doneC?' done':'')+'">'+cn+(mine&&!doneC?' ◆':'')+'<small>'+fmt(c.soldiers)+'</small></div>'}));
@@ -1800,7 +2292,8 @@ function renderPanel(){
   }
   var c=S.cities[SEL], meta=CITY[SEL], mine=c.fac===S.player;
   var gs = c.fac ? gensIn(SEL,c.fac).sort(function(a,b){ return (isRuler(b)-isRuler(a)) || (b.war+b.int-a.war-a.int); }) : [];
-  var h='<div class="city-h"><h2>'+SEL+'</h2><span class="facchip"><i style="background:'+facColor(c.fac)+'"></i>'+esc(facTitle(c.fac))+'</span></div>'+
+  var h='<div class="city-h"><h2>'+SEL+'</h2><span class="facchip"><i style="background:'+facColor(c.fac)+'"></i>'+esc(facTitle(c.fac))+'</span>'+
+    (c.fac && !mine ? '<span class="hint">'+(isAlly(S.player,c.fac)?'동맹 '+S.ally[rk(S.player,c.fac)]+'개월 · ':'')+'우호도 '+rel(S.player,c.fac)+'</span>' : '')+'</div>'+
     '<div class="city-sub">'+meta.prov+' · '+meta.jun+' · 현재 '+meta.modern+'</div>'+
     '<div class="grid">'+
       '<div><span>인구</span>'+fmt(c.pop/10000)+'만</div><div><span>금</span>'+fmt(c.gold)+'</div><div><span>군량</span>'+fmt(c.food)+'</div>'+
@@ -1815,8 +2308,8 @@ function renderPanel(){
   }
   h+='<div class="sect">장수 '+gs.length+'명</div>';
   if(gs.length){
-    h+='<table class="gens"><tr><th>이름</th><th>무력</th><th>지력</th><th>정치</th><th>매력</th><th>충성</th></tr>'+
-      gs.map(function(g){ return '<tr><td>'+(isRuler(g)?'♛ ':'')+esc(g.name)+'</td><td>'+g.war+'</td><td>'+g.int+'</td><td>'+g.pol+'</td><td>'+g.cha+'</td><td'+(g.loyal<60?' class="hi"':'')+'>'+g.loyal+'</td></tr>'; }).join('')+'</table>';
+    h+='<table class="gens"><tr><th>이름</th><th>나이</th><th>무력</th><th>지력</th><th>정치</th><th>매력</th><th>충성</th></tr>'+
+      gs.map(function(g){ return '<tr><td>'+(isRuler(g)?'♛ ':'')+esc(g.name)+'</td><td>'+(ageOf(g)!=null?ageOf(g):'')+'</td><td>'+g.war+'</td><td>'+g.int+'</td><td>'+g.pol+'</td><td>'+g.cha+'</td><td'+(g.loyal<60?' class="hi"':'')+'>'+g.loyal+'</td></tr>'; }).join('')+'</table>';
   } else h+='<p class="hint">'+(c.fac?'주둔 장수가 없어 명령할 수 없습니다. 이웃 도시에서 장수를 이동시키세요.':'주인 없는 땅입니다. 인접한 아군 도시에서 출진해 차지할 수 있습니다.')+'</p>';
   var fr=freeIn(SEL);
   if(mine && fr.length) h+='<p class="hint">이 도시에 재야 인재의 소문이 있습니다 ('+fr.length+'명).</p>';
@@ -1834,7 +2327,8 @@ function renderPanel(){
         '<button class="btn sm primary" data-c="attack"'+(!hasEnemy||c.soldiers<500?' disabled':'')+'>출진</button></div></div>'+
         '<div class="cmd-group"><h5>인사</h5><div class="btns"><button class="btn sm" data-c="search">인재 탐색</button>'+
         '<button class="btn sm" data-c="reward"'+(c.gold<100||gs.filter(function(g){return !isRuler(g);}).length===0?' disabled':'')+'>포상</button>'+
-        '<button class="btn sm" data-c="move"'+(!hasOwn?' disabled':'')+'>이동·수송</button></div></div>';
+        '<button class="btn sm" data-c="move"'+(!hasOwn?' disabled':'')+'>이동·수송</button></div></div>'+
+        '<div class="cmd-group"><h5>외교</h5><div class="btns"><button class="btn sm" data-c="dip">외교 (친선·동맹·교환·원군·항복권고)</button></div></div>';
     }
     h+='<label class="hint" style="display:flex;gap:6px;align-items:center;margin-top:8px;cursor:pointer"><input type="checkbox" id="deleg"'+(S.deleg[SEL]?' checked':'')+'> 이 도시 위임 (공격·이동은 하지 않음)</label>';
   } else {
@@ -1846,7 +2340,7 @@ function renderPanel(){
   P.innerHTML=h;
   P.querySelectorAll('[data-c]').forEach(function(b){ b.onclick=function(){
     var k=b.dataset.c;
-    if(DEV[k]) uiDevelop(SEL,k); else ({relief:uiRelief, market:uiTrade, recruit:uiRecruit, train:uiTrain, attack:uiAttack, search:uiSearch, reward:uiReward, move:uiMove})[k](SEL);
+    if(DEV[k]) uiDevelop(SEL,k); else ({dip:uiDiplomacy, relief:uiRelief, market:uiTrade, recruit:uiRecruit, train:uiTrain, attack:uiAttack, search:uiSearch, reward:uiReward, move:uiMove})[k](SEL);
   }; });
   var dl=P.querySelector('#deleg'); if(dl) dl.onchange=function(){ S.deleg[SEL]=dl.checked; render(); };
   P.querySelector('#close-sel').onclick=function(){ SEL=null; map.removeLayer(selRing); renderPanel(); };
@@ -1861,13 +2355,16 @@ function facSummary(fid){
 }
 function startScreen(){
   var rank=FACTIONS.map(function(f){ var s=facSummary(f[0]); return {f:f, s:s, score:s.sol/1000 + s.gs.length*2 + s.cs.length*5}; }).sort(function(a,b){ return b.score-a.score; });
-  var html='<p>189년 9월, 동탁이 낙양을 장악했습니다. 군주를 골라 '+NC+'개 도시를 모두 차지하면 천하통일입니다.</p><div class="fac-grid">'+
+  var html='<p>189년 9월, 동탁이 낙양을 장악했습니다. 군주를 골라 '+NC+'개 도시를 모두 차지하면 천하통일입니다.</p>'+
+    '<div class="lifesel"><b>수명</b><label><input type="radio" name="life" value="real"'+(LIFE_MODE==='real'?' checked':'')+'> 사서 몰년 (역사대로 세상을 떠남)</label>'+
+    '<label><input type="radio" name="life" value="virtual"'+(LIFE_MODE==='virtual'?' checked':'')+'> 가상 수명 (60~80세 무작위)</label></div><div class="fac-grid">'+
     rank.map(function(x){ var f=x.f, s=x.s, d = x.score>45?['쉬움','#d9ead3']:x.score>25?['보통','#fff2cc']:['어려움','#f4cccc'];
       return '<div class="fac-card" tabindex="0" data-f="'+f[0]+'"><h4><i style="background:'+f[1]+'"></i>'+(FNAME[f[0]]?FNAME[f[0]]+' · '+f[0]:f[0])+'<span class="diff" style="background:'+d[1]+'">'+d[0]+'</span></h4>'+
         '<p>'+s.cs.join('·')+' · 병력 '+fmt(s.sol)+'</p><p>장수 '+s.gs.length+'명 — '+s.star.join(', ')+'</p></div>'; }).join('')+'</div>';
   var chosen=null;
   modal({ title:'시나리오 1 · 189년 동탁의 폭정 — 군주 선택', wide:true, html:html,
-    mount:function(b){ b.querySelectorAll('.fac-card').forEach(function(el){ function go(){ chosen=el.dataset.f; document.getElementById('modal-bg').style.display='none'; begin(chosen); }
+    mount:function(b){ b.querySelectorAll('input[name=life]').forEach(function(r){ r.onchange=function(){ LIFE_MODE=r.value; }; });
+      b.querySelectorAll('.fac-card').forEach(function(el){ function go(){ chosen=el.dataset.f; document.getElementById('modal-bg').style.display='none'; begin(chosen); }
       el.onclick=go; el.onkeydown=function(e){ if(e.key==='Enter') go(); }; }); },
     buttons:[{label:'저장 코드로 불러오기', v:'imp'},{label:'저장된 게임 불러오기', v:'load'}] }).then(function(v){ if(v==='load') loadGame(); else if(v==='imp') importModal(); });
 }
@@ -1885,7 +2382,7 @@ function loadGame(){
   try{ var a=localStorage.getItem('sgz-save'), b=localStorage.getItem('sgz-auto');
     if(a && b){ var pa=JSON.parse(a), pb=JSON.parse(b); raw = (pb.year*12+pb.month > pa.year*12+pa.month) ? b : a; } else raw=a||b; }catch(e){}
   if(!raw){ modal({title:'불러오기',html:'<p>저장된 게임이 없습니다.</p>',buttons:[{label:'확인',v:1,primary:true}]}).then(function(){ if(!S) startScreen(); }); return; }
-  S=JSON.parse(raw); SEL=null; render(); addLog('저장된 게임을 불러왔습니다.', 'good'); render();
+  S=JSON.parse(raw); migrate(); SEL=null; render(); addLog('저장된 게임을 불러왔습니다.', 'good'); render();
 }
 function encodeSave(){ return btoa(unescape(encodeURIComponent(JSON.stringify(S)))); }
 function decodeSave(s){ return JSON.parse(decodeURIComponent(escape(atob(s.trim())))); }
@@ -1905,7 +2402,7 @@ function importModal(){
     buttons:[{label:'취소', v:null},{label:'불러오기', primary:true, get:function(b){
       try{ var st=decodeSave(b.querySelector('#imp').value); if(!st||!st.cities||!st.gens) throw 0; return st; }
       catch(e){ b.querySelector('#impmsg').textContent='코드를 읽지 못했습니다. 끝까지 빠짐없이 붙여넣었는지 확인하세요.'; return false; } }}] })
-  .then(function(st){ if(!st){ if(!S) startScreen(); return; } S=st; SEL=null; addLog('저장 코드에서 게임을 불러왔습니다.', 'good'); render(); try{ localStorage.setItem('sgz-save', JSON.stringify(S)); }catch(e){} });
+  .then(function(st){ if(!st){ if(!S) startScreen(); return; } S=st; migrate(); SEL=null; addLog('저장 코드에서 게임을 불러왔습니다.', 'good'); render(); try{ localStorage.setItem('sgz-save', JSON.stringify(S)); }catch(e){} });
 }
 function menuModal(){
   modal({ title:'메뉴', html:'<div class="menu-grid">'+
@@ -1930,22 +2427,27 @@ function helpModal(){
     '<p><b>군사</b> — 징병(금 소모, 민심↓), 훈련(무력), 출진은 가도로 이어진 인접 도시만 공격할 수 있습니다.</p>'+
     '<p><b>전투</b> — 최대 30일 자동 전투입니다. 병력·훈련도·대장 무력·참모 지력·성벽이 영향을 주고, 가도 위 전장의 지형(관문·장성은 수비 유리, 수전은 화계 빈발)이 반영됩니다. 무력 높은 장수는 일기토를 벌여 적장을 사로잡기도 합니다.</p>'+
     '<p><b>인사</b> — 인재 탐색으로 재야 장수를 등용합니다(등장 연도가 된 인물만). 충성이 낮으면 출분하니 포상으로 달래세요. 사로잡은 장수는 등용·석방·처단할 수 있습니다.</p>'+
-    '<p><b>역사 이벤트</b> — 반동탁 연합(190.1), 장안 천도(190.2), 동탁 암살(192.4), 고구려 좌가려의 난(191.4), 산상왕 즉위와 발기의 난(197.5).</p>'+
+    '<p><b>역사 이벤트</b> — 반동탁 연합(190.1), 장안 천도(190.2). 사서 몰년 모드에서는 동탁 암살(192.4), 좌가려의 난(191.4), 고국천왕 붕어와 산상왕 즉위(197.5) 등이 수명 시스템으로 일어납니다.</p>'+
+    '<p><b>수명</b> — 장수는 몰년(또는 가상 수명)에 세상을 떠나고, 군주가 죽으면 후계자가 잇습니다. 매 턴 시작 시 전령 보고에 부고와 외교 소식이 나옵니다.</p>'+
+    '<p><b>외교</b> — 도시 명령의 외교에서 사자를 보내 친선·동맹(우호도 70 이상, 24개월)·금군량 교환·원군 요청·항복권고를 합니다. 동맹을 깨고 공격하면 모든 세력의 신뢰를 잃습니다.</p>'+
     '<p><b>위임</b> — 도시 패널의 체크박스로 내정을 맡기면 매달 알아서 운영합니다.</p>'+
     '<p><b>저장</b> — 매 턴 자동 저장되고, 메뉴의 저장으로 원하는 시점을 남길 수 있습니다. 브라우저 데이터가 지워질 수 있으니 가끔 "저장 코드 복사"로 백업해 두세요.</p>',
     buttons:[{label:'확인',v:1,primary:true}] });
 }
 function gensModal(){
   var gs=facGens(S.player).sort(function(a,b){ return a.city<b.city?-1:a.city>b.city?1:(b.war+b.int-a.war-a.int); });
-  modal({ title:'장수 일람 — '+facName(S.player)+' ('+gs.length+'명)', wide:true, html:'<table class="list"><tr><th>이름</th><th>위치</th><th class="n">무력</th><th class="n">지력</th><th class="n">정치</th><th class="n">매력</th><th class="n">충성</th></tr>'+
-    gs.map(function(g){ return '<tr><td>'+(isRuler(g)?'♛ ':'')+esc(g.name)+'</td><td>'+g.city+'</td><td class="n">'+g.war+'</td><td class="n">'+g.int+'</td><td class="n">'+g.pol+'</td><td class="n">'+g.cha+'</td><td class="n">'+g.loyal+'</td></tr>'; }).join('')+'</table>',
+  modal({ title:'장수 일람 — '+facName(S.player)+' ('+gs.length+'명)', wide:true, html:'<div class="tbl-wrap"><table class="list"><tr><th>이름</th><th>위치</th><th class="n">나이</th><th class="n">무력</th><th class="n">지력</th><th class="n">정치</th><th class="n">매력</th><th class="n">충성</th></tr>'+
+    gs.map(function(g){ return '<tr><td>'+(isRuler(g)?'♛ ':'')+esc(g.name)+'</td><td>'+g.city+'</td><td class="n">'+ageStr(g)+'</td><td class="n">'+g.war+'</td><td class="n">'+g.int+'</td><td class="n">'+g.pol+'</td><td class="n">'+g.cha+'</td><td class="n">'+g.loyal+'</td></tr>'; }).join('')+'</table></div>',
     buttons:[{label:'닫기',v:1,primary:true}] });
 }
 function facsModal(){
   var fs=Object.keys(S.factions).filter(function(k){return S.factions[k].alive;}).map(function(k){
     var cs=facCities(k); return {k:k, cs:cs, sol:cs.reduce(function(a,n){return a+S.cities[n].soldiers;},0), g:facGens(k).length}; }).sort(function(a,b){ return b.cs.length-a.cs.length || b.sol-a.sol; });
-  modal({ title:'세력 정보 — '+dateStr(), wide:true, html:'<table class="list"><tr><th>세력</th><th class="n">도시</th><th class="n">병력</th><th class="n">장수</th><th>영지</th></tr>'+
-    fs.map(function(f){ return '<tr><td><span class="facchip"><i style="background:'+facColor(f.k)+'"></i>'+esc(facName(f.k))+'</span>'+(f.k===S.player?' (나)':'')+'</td><td class="n">'+f.cs.length+'</td><td class="n">'+fmt(f.sol)+'</td><td class="n">'+f.g+'</td><td class="hint">'+f.cs.join(', ')+'</td></tr>'; }).join('')+'</table>',
+  modal({ title:'세력 정보 — '+dateStr(), wide:true, html:'<div class="tbl-wrap"><table class="list"><tr><th>세력</th><th class="n">도시</th><th class="n">병력</th><th class="n">장수</th><th class="n">우호도</th><th>관계</th><th>영지</th></tr>'+
+    fs.map(function(f){ var me=f.k===S.player, al=!me && isAlly(S.player,f.k);
+      return '<tr><td><span class="facchip"><i style="background:'+facColor(f.k)+'"></i>'+esc(facName(f.k))+'</span>'+(me?' (나)':'')+'</td><td class="n">'+f.cs.length+'</td><td class="n">'+fmt(f.sol)+'</td><td class="n">'+f.g+'</td>'+
+        '<td class="n">'+(me?'-':rel(S.player,f.k))+'</td><td>'+(me?'':al?'동맹 '+S.ally[rk(S.player,f.k)]+'개월':'')+'</td><td class="hint">'+f.cs.join(', ')+'</td></tr>'; }).join('')+'</table></div>'+
+    (function(){ var a=Object.keys(S.ally).filter(function(k){ return S.ally[k]>0; }); return '<div class="sect">동맹 현황</div><p class="hint">'+(a.length ? a.map(function(k){ var p=k.split('|'); return esc(facName(p[0]))+' – '+esc(facName(p[1]))+' ('+S.ally[k]+'개월)'; }).join(' · ') : '현재 맺어진 동맹이 없습니다.')+'</p>'; })(),
     buttons:[{label:'닫기',v:1,primary:true}] });
 }
 
@@ -1965,10 +2467,10 @@ function boot(){
 }
 var HOT = (window.claude && window.claude.hot) || null;
 if(HOT && HOT.snapshot) { try{ HOT.snapshot(function(){ return S ? { S:S } : {}; }); }catch(e){} }
-window.SGZ = { get S(){ return S; }, begin:begin, endTurn:endTurn, setAuto:function(v){ AUTO=v; }, doAttack:doAttack, aiCity:aiCity };
+window.SGZ = { get S(){ return S; }, set S(v){ S=v; }, begin:begin, endTurn:endTurn, setAuto:function(v){ AUTO=v; }, doAttack:doAttack, aiCity:aiCity, migrate:migrate, setLife:function(m){ LIFE_MODE=m; }, rep:rep, showReport:showReport, uiDiplomacy:uiDiplomacy, facsModal:facsModal };
 function start(data){
   boot();
-  if(data && data.S){ document.getElementById('modal-bg').style.display='none'; S=data.S; SEL=null; render(); }
+  if(data && data.S){ document.getElementById('modal-bg').style.display='none'; S=data.S; migrate(); SEL=null; render(); }
 }
 function go(){ if(HOT && HOT.ready) HOT.ready(start); else start(HOT && HOT.data ? HOT.data : {}); }
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', go); else go();
