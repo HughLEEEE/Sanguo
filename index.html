@@ -2474,7 +2474,7 @@ function scriptedAttack(who, cn){
 function histText(e){ return e.x || ({take:e.who+' → '+e.city, join:e.who+'이(가) '+facName(e.fac)+'에 합류', absorb:e.who+'이(가) '+e.target+'을(를) 흡수', guest:e.fac+'이(가) '+e.host+'에게 의탁',
   indep:e.fac+' 독립 ('+e.city+')', move:e.fac+' 본거지 → '+e.to, release:e.city+' 공백화', spawn:e.fac+' 세력 등장', ally:e.a+'–'+e.b+' 동맹', ruler:e.fac+' 군주 → '+e.who, destroy:e.fac+' 해체', rename:e.fac+' → 국호 '+e.name})[e.t] || ''; }
 function histDone(i, e){ S.hist[i]='done'; if(e.x) rep('hist', (e.kr?'〔사서 기년〕 ':'')+e.x); }
-function histSkip(i, e){ S.hist[i]='skip'; if(e.x) addLog('역사가 바뀌어 일어나지 않은 일: '+e.x); }
+function histSkip(i, e){ S.hist[i]='skip'; }   // 일어나지 않은 사건은 연표 창에서 ✗로만 표시
 async function runHistory(){
   if(S.mode!=='history') return;
   var P=S.player;
@@ -2495,8 +2495,8 @@ async function runHistory(){
     }
     if(t==='take'){
       var c=S.cities[e.city];
-      if(!alive(e.who) || e.who===P) ok=false;
-      else if(c.fac===P) battle=scriptedAttack(e.who, e.city);
+      if(!alive(e.who) || e.who===P || !facCities(e.who).length) ok=false;   // 도시를 잃은(의탁·유랑) 세력은 연표 점령 불가
+      else if(c.fac===P){ battle=scriptedAttack(e.who, e.city); if(!battle) ok=false; }   // 인접한 출진 거점이 없으면 일어나지 않음
       else if(c.fac!==null && c.fac!==e.from) ok=false;
       else setOwner(e.city, e.who, { destroy:e.destroy, exile:e.exile });
     }
@@ -2505,7 +2505,7 @@ async function runHistory(){
       if(c2.fac!==e.from || e.from===P) ok=false; else setOwner(e.city, null);
     }
     else if(t==='absorb'){
-      if(!alive(e.who) || !alive(e.target) || e.target===P) ok=false;
+      if(!alive(e.who) || !alive(e.target) || e.target===P || !facCities(e.who).length) ok=false;
       else if(e.who===P){ S.offers.push({ type:'cede', from:e.target, x:e.x }); }
       else { rep('dip', absorb(e.who, e.target)); }
     }
@@ -2549,7 +2549,7 @@ async function runHistory(){
     else if(t==='indep'){
       var c4=S.cities[e.city], gg=guestOf(e.fac);
       if(!alive(e.fac) || e.fac===P || !gg) ok=false;
-      else if(c4.fac===P) battle=scriptedAttack(e.fac, e.city);
+      else if(c4.fac===P){ battle=scriptedAttack(e.fac, e.city); if(!battle) ok=false; }
       else if(c4.fac!==null && c4.fac!==e.from) ok=false;
       else {
         var oldOwner=c4.fac;
