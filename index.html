@@ -3253,7 +3253,7 @@ function startScreen(){
       return '<div class="fac-card" tabindex="0" data-f="'+f[0]+'"><h4><i style="background:'+f[1]+'"></i>'+(FNAME[f[0]]?FNAME[f[0]]+' · '+f[0]:f[0])+'<span class="diff" style="background:'+d[1]+'">'+d[0]+'</span></h4>'+
         '<p>'+s.cs.join('·')+' · 병력 '+fmt(s.sol)+'</p><p>장수 '+s.gs.length+'명 — '+s.star.join(', ')+'</p></div>'; }).join('')+'</div>';
   var chosen=null;
-  modal({ title:'시나리오 1 · 189년 동탁의 폭정 — 군주 선택', wide:true, html:html,
+  modal({ title:'시나리오 1 · 189년 동탁의 폭정 — 군주 선택', wide:true, html:html+'<p class="hint" style="text-align:right">버전 '+APP_VER+'</p>',
     mount:function(b){ b.querySelectorAll('input[name=life]').forEach(function(r){ r.onchange=function(){ LIFE_MODE=r.value; }; });
       b.querySelectorAll('input[name=vic]').forEach(function(r){ r.onchange=function(){ VICTORY=r.value; }; });
       GAME_MODE='virtual';
@@ -3306,15 +3306,16 @@ function importModal(){
     mount:function(b){ b.querySelector('#impf').onchange=function(e){ var f=e.target.files[0]; if(!f) return; var rd=new FileReader(); rd.onload=function(){ b.querySelector('#imp').value=rd.result; }; rd.readAsText(f); }; },
     buttons:[{label:'취소', v:null},{label:'불러오기', primary:true, get:function(b){
       try{ var st=decodeSave(b.querySelector('#imp').value); if(!st||!st.cities||!st.gens) throw 0; return st; }
-      catch(e){ b.querySelector('#impmsg').textContent='코드를 읽지 못했습니다. 끝까지 빠짐없이 붙여넣었는지 확인하세요.'; return false; } }}] })
+      catch(e){ var v=b.querySelector('#imp').value.replace(/\s+/g,''); b.querySelector('#impmsg').textContent='코드를 읽지 못했습니다 (길이 '+v.length.toLocaleString()+'자). 끝까지 빠짐없이 붙여넣었는지 확인하세요.'; return false; } }}] })
   .then(function(st){ if(!st){ if(!S) startScreen(); return; } S=st; migrate(); SEL=null; addLog('저장 코드에서 게임을 불러왔습니다.', 'good'); render(); try{ localStorage.setItem('sgz-save', JSON.stringify(S)); }catch(e){} });
 }
+var APP_VER='v14 · 2026-10-04';
 function menuModal(){
   modal({ title:'메뉴', html:'<div class="menu-grid">'+
       '<button class="btn" data-m="gens">장수 일람</button><button class="btn" data-m="facs">세력 정보</button>'+
       '<button class="btn" data-m="save">저장</button><button class="btn" data-m="load">불러오기</button>'+
       '<button class="btn" data-m="exp">저장 코드 복사</button><button class="btn" data-m="imp">저장 코드로 불러오기</button>'+
-      '<button class="btn" data-m="hist">연표</button><button class="btn" data-m="help">도움말</button><button class="btn" data-m="new">새 게임</button></div>',
+      '<button class="btn" data-m="hist">연표</button><button class="btn" data-m="help">도움말</button><button class="btn" data-m="new">새 게임</button></div><p class="hint" style="text-align:right;margin-top:8px">버전 '+APP_VER+'</p>',
     mount:function(b){ b.querySelectorAll('[data-m]').forEach(function(el){ el.onclick=function(){
       document.getElementById('modal-bg').style.display='none';
       var k=el.dataset.m;
