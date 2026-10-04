@@ -3288,12 +3288,15 @@ function decodeSave(s){
   // 붙여넣기 과정에서 바뀌기 쉬운 문자 복원: 공백·줄바꿈 제거, 각종 대시 → '-', 전각 문자 → 반각
   s=String(s).replace(/[\s\u200b-\u200d\ufeff]+/g,'').replace(/[\u2010-\u2015\u2212\uff0d]/g,'-')
     .replace(/[\uff01-\uff5e]/g,function(c){ return String.fromCharCode(c.charCodeAt(0)-0xfee0); });
-  var k=s.indexOf('SGZ2:');
-  if(k>=0){ var body=s.slice(k+5), bad=body.replace(/[A-Za-z0-9+\-$]/g,'');
-    if(bad.length) throw new Error('코드에 쓸 수 없는 문자 '+bad.length+'개가 섞여 있습니다 ('+bad.slice(0,3)+')');
-    var j=LZString.decompressFromEncodedURIComponent(body); if(!j) throw new Error('압축을 풀지 못했습니다');
-    try{ return JSON.parse(j); }catch(e){ throw new Error('코드 일부가 바뀌었거나 빠졌습니다'); } }
-  return JSON.parse(decodeURIComponent(escape(atob(s)))); }
+  // 여러 방식으로 차례로 시도: 압축 형식(접두어 있음/빠짐/변형) → 예전 형식
+  var tries=[], k=s.toUpperCase().lastIndexOf('SGZ2');
+  if(k>=0) tries.push(s.slice(k+4).replace(/^[:;\uff1a]/,''));
+  tries.push(s.replace(/^[^:]{0,8}:/,''), s);
+  var lastErr='코드를 해석하지 못했습니다';
+  for(var i=0;i<tries.length;i++){ var body=tries[i].replace(/[^A-Za-z0-9+\-$]/g,'');
+    try{ var j=LZString.decompressFromEncodedURIComponent(body); if(j){ var o=JSON.parse(j); if(o && o.cities && o.gens) return o; } }catch(e){ lastErr='코드 일부가 바뀌었거나 빠졌습니다'; } }
+  try{ return JSON.parse(decodeURIComponent(escape(atob(s)))); }catch(e){ throw new Error(lastErr); }
+}
 function saveFile(){
   var code=encodeSave(), name='sanguo_save_'+S.year+'_'+S.month+'.txt';
   try{ var bl=new Blob([code],{type:'text/plain'}), a=document.createElement('a'); a.href=URL.createObjectURL(bl); a.download=name; document.body.appendChild(a); a.click();
@@ -3316,7 +3319,7 @@ function importModal(){
       catch(e){ var v=b.querySelector('#imp').value.replace(/\s+/g,''); b.querySelector('#impmsg').textContent='코드를 읽지 못했습니다 (길이 '+v.length.toLocaleString()+'자'+(e&&e.message?' · '+e.message:'')+'). 파일 선택으로도 시도해 보세요.'; return false; } }}] })
   .then(function(st){ if(!st){ if(!S) startScreen(); return; } S=st; migrate(); SEL=null; addLog('저장 코드에서 게임을 불러왔습니다.', 'good'); render(); try{ localStorage.setItem('sgz-save', JSON.stringify(S)); }catch(e){} });
 }
-var APP_VER='v15 · 2026-10-04';
+var APP_VER='v16 · 2026-10-04';
 function menuModal(){
   modal({ title:'메뉴', html:'<div class="menu-grid">'+
       '<button class="btn" data-m="gens">장수 일람</button><button class="btn" data-m="facs">세력 정보</button>'+
