@@ -725,6 +725,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     text-shadow:-1px -1px 0 #fff,1px -1px 0 #fff,-1px 1px 0 #fff,1px 1px 0 #fff;}
   .layer-ctl{background:var(--paper3);border:1px solid var(--line);border-radius:6px;padding:6px 9px;font-size:12px;line-height:1.7;box-shadow:0 2px 8px rgba(0,0,0,.15);color:var(--ink);}
   .layer-ctl label{display:flex;align-items:center;gap:5px;cursor:pointer;white-space:nowrap;}
+  .relief-tiles{mix-blend-mode:multiply;}
   .layer-ctl .note{font-size:10.5px;color:var(--muted);max-width:170px;white-space:normal;line-height:1.35;}
   .errline{color:var(--vermilion-dark);font-weight:700;font-size:12.5px;min-height:1em;margin-top:6px;}
   textarea.code{width:100%;height:120px;font:12px/1.4 ui-monospace,monospace;border:1px solid var(--line);border-radius:5px;background:var(--paper3);color:var(--ink);padding:6px;}
@@ -3135,16 +3136,20 @@ async function showBattle(r){
 }
 
 /* ───────────────────────── 지도·렌더 ───────────────────────── */
-var BFMK={}; var map, MK={}, LB={}, HIT={}, selRing, LAYERS={}, TILE_STATE='', GL=null;
+var BFMK={}, TERRAIN_STATE=''; var map, MK={}, LB={}, HIT={}, selRing, LAYERS={}, TILE_STATE='', GL=null;
 function updateLayerNote(){
   var st=document.getElementById('ly-osm-st'), note=document.getElementById('ly-note'), cb=document.getElementById('ly-osm'); if(!st) return;
   st.textContent = TILE_STATE==='사용 중' ? '' : '('+TILE_STATE+')';
-  if(TILE_STATE==='차단됨'){ cb.checked=false; cb.disabled=true;
-    note.textContent='이 환경에서는 OSM 지도를 불러올 수 없어 내장 현대 지도로 표시합니다. 파일을 인터넷 연결 상태에서 열면 OSM 지도가 함께 나옵니다.'; }
-  else note.textContent='';
+  var ts=document.getElementById('ly-ter-st'), tc=document.getElementById('ly-ter');
+  if(ts) ts.textContent = (TERRAIN_STATE && TERRAIN_STATE!=='사용 중') ? '('+TERRAIN_STATE+')' : '';
+  if(TERRAIN_STATE==='차단됨' && tc){ tc.checked=false; tc.disabled=true; }
+  var msgs=[];
+  if(TILE_STATE==='차단됨'){ cb.checked=false; cb.disabled=true; msgs.push('이 환경에서는 OSM 지도를 불러올 수 없어 내장 현대 지도로 표시합니다.'); }
+  if(TERRAIN_STATE==='차단됨') msgs.push('지형도는 인터넷에 연결된 GitHub Pages 등에서 볼 수 있습니다.');
+  note.textContent=msgs.join(' ');
 }
 function initMap(){
-  map = L.map('map', { zoomControl:true, minZoom:4, maxZoom:10, maxBounds:[[6,78],[50,140]], maxBoundsViscosity:0.8, tap:true }).setView([32.5, 111], 5);
+  map = L.map('map', { zoomControl:true, minZoom:4, maxZoom:12, maxBounds:[[6,78],[50,140]], maxBoundsViscosity:0.8, tap:true }).setView([32.5, 111], 5);
   map.attributionControl.setPrefix(false);
   [['bg',150],['modern',350],['modernLbl',380]].forEach(function(p){ var el=map.createPane(p[0]); el.style.zIndex=p[1]; el.style.pointerEvents='none'; });
   var cs=getComputedStyle(document.documentElement), cv=function(n){ return cs.getPropertyValue(n).trim(); };
@@ -3160,6 +3165,15 @@ function initMap(){
   osm.addTo(map);
   setTimeout(function(){ if(!ok && map.hasLayer(osm)){ map.removeLayer(osm); TILE_STATE='차단됨'; updateLayerNote(); } }, 6000);
   map.attributionControl.addAttribution('지형 Natural Earth');
+  // 2-1) 인터넷 지형도: 색 지형(Esri World Physical, 8단계까지) + 음영기복(Esri World Shaded Relief, 13단계까지 선명) 겹침
+  var ESRI='https://server.arcgisonline.com/ArcGIS/rest/services/';
+  var phys = L.tileLayer(ESRI+'World_Physical_Map/MapServer/tile/{z}/{y}/{x}', { maxZoom:12, maxNativeZoom:8, attribution:'지형도 &copy; Esri, USGS, NOAA' });
+  var relief = L.tileLayer(ESRI+'World_Shaded_Relief/MapServer/tile/{z}/{y}/{x}', { maxZoom:12, maxNativeZoom:13, opacity:0.55, className:'relief-tiles' });
+  var terrain = L.layerGroup([phys, relief]);
+  TERRAIN_STATE='';
+  var tok=0, tbad=0;
+  phys.on('tileload', function(){ tok++; if(TERRAIN_STATE!=='사용 중'){ TERRAIN_STATE='사용 중'; updateLayerNote(); } });
+  phys.on('tileerror', function(){ tbad++; if(!tok && tbad>=4 && map.hasLayer(terrain)){ map.removeLayer(terrain); TERRAIN_STATE='차단됨'; updateLayerNote(); } });
   // 3) 현대 행정구역·지명 (벡터 내장)
   var mod = L.layerGroup();
   MOD.lines.forEach(function(l){ L.polyline(l, { pane:'modern', color:cv('--modern-line'), weight:1.2, opacity:.8, dashArray:'4,4', interactive:false }).addTo(mod); });
@@ -3178,18 +3192,25 @@ function initMap(){
   mod.addTo(map); map.on('zoomend', zoomTiers); zoomTiers();
   // 4) 13주 음영
   var han = L.layerGroup().addTo(map);
-  LAYERS = { osm:osm, mod:mod, han:han, zoomTiers:zoomTiers };
+  LAYERS = { osm:osm, mod:mod, han:han, terrain:terrain, zoomTiers:zoomTiers };
   var ctl = L.control({ position:'topright' });
   ctl.onAdd = function(){
     var d=L.DomUtil.create('div','layer-ctl');
     d.innerHTML='<label><input type="checkbox" id="ly-mod" checked> 현대 지명·성 경계</label>'+
       '<label><input type="checkbox" id="ly-han" checked> 후한 13주 음영</label>'+
-      '<label><input type="checkbox" id="ly-osm" checked> OSM 지도 <span id="ly-osm-st"></span></label><div class="note" id="ly-note"></div>';
+      '<label><input type="checkbox" id="ly-osm" checked> OSM 지도 <span id="ly-osm-st"></span></label>'+
+      '<label><input type="checkbox" id="ly-ter"> 지형도 <span id="ly-ter-st"></span></label><div class="note" id="ly-note"></div>';
     L.DomEvent.disableClickPropagation(d); L.DomEvent.disableScrollPropagation(d);
     setTimeout(function(){
       d.querySelector('#ly-mod').onchange=function(e){ if(e.target.checked) mod.addTo(map); else map.removeLayer(mod); zoomTiers(); };
       d.querySelector('#ly-han').onchange=function(e){ if(e.target.checked) han.addTo(map); else map.removeLayer(han); };
-      d.querySelector('#ly-osm').onchange=function(e){ if(e.target.checked){ if(TILE_STATE!=='차단됨') osm.addTo(map); } else map.removeLayer(osm); };
+      d.querySelector('#ly-osm').onchange=function(e){ if(e.target.checked){ if(TILE_STATE!=='차단됨') osm.addTo(map); var t=d.querySelector('#ly-ter'); if(t.checked){ t.checked=false; map.removeLayer(terrain); } } else map.removeLayer(osm); };
+      d.querySelector('#ly-ter').onchange=function(e){ if(e.target.checked){
+          if(TERRAIN_STATE==='차단됨'){ e.target.checked=false; return; }
+          tok=0; tbad=0; if(!TERRAIN_STATE) TERRAIN_STATE='확인 중'; terrain.addTo(map); updateLayerNote();
+          setTimeout(function(){ if(!tok && map.hasLayer(terrain)){ map.removeLayer(terrain); TERRAIN_STATE='차단됨'; updateLayerNote(); } }, 6000);
+          var o=d.querySelector('#ly-osm'); if(o.checked){ o.checked=false; map.removeLayer(osm); }   // 지형도와 OSM은 하나만
+        } else map.removeLayer(terrain); };
       updateLayerNote(); },0);
     return d; };
   ctl.addTo(map);
@@ -3418,7 +3439,7 @@ function importModal(){
       catch(e){ var v=b.querySelector('#imp').value.replace(/\s+/g,''); b.querySelector('#impmsg').textContent='코드를 읽지 못했습니다 (길이 '+v.length.toLocaleString()+'자'+(e&&e.message?' · '+e.message:'')+'). 파일 선택으로도 시도해 보세요.'; return false; } }}] })
   .then(function(st){ if(!st){ if(!S) startScreen(); return; } S=st; migrate(); SEL=null; addLog('저장 코드에서 게임을 불러왔습니다.', 'good'); render(); try{ localStorage.setItem('sgz-save', JSON.stringify(S)); }catch(e){} });
 }
-var APP_VER='v20 · 2026-10-04';
+var APP_VER='v21 · 2026-10-13';
 function menuModal(){
   modal({ title:'메뉴', html:'<div class="menu-grid">'+
       '<button class="btn" data-m="gens">장수 일람</button><button class="btn" data-m="facs">세력 정보</button>'+
